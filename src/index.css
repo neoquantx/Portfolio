@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  
+  --color-nano-void: var(--bg-primary);
+  --color-nano-cyan: var(--accent-primary);
+  --color-nano-purple: var(--accent-secondary);
+  --color-nano-orange: var(--accent-tertiary);
+  
+  --font-space: "Space Grotesk", sans-serif;
+  --font-inter: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+:root {
+  /* LIGHT MODE (Stark Clinical Lab) */
+  --bg-primary: #e2e8f0; /* Slate 200 - contrast for white glass */
+  --bg-secondary: #f8fafc; /* Slate 50 */
+  --text-primary: #0f172a; /* Slate 900 */
+  --text-secondary: #334155; /* Slate 700 */
+  
+  /* Ocean Blue accents */
+  --accent-primary: #0ea5e9; /* Sky 500 */
+  --accent-secondary: #0284c7; /* Sky 600 */
+  --accent-tertiary: #3b82f6; /* Blue 500 */
+  
+  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.45) 100%);
+  --glass-border: rgba(14, 165, 233, 0.3); /* Ocean blue tinted border */
+  --glass-shadow: 0 20px 40px -10px rgba(14, 165, 233, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  --glass-glow: 0 0 20px rgba(14, 165, 233, 0.2);
+  
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+:root.dark {
+  /* DARK MODE (Bleeding Edge HUD) */
+  --bg-primary: #020617; /* Deep Void */
+  --bg-secondary: #0f172a; 
+  --text-primary: #f8fafc; 
+  --text-secondary: #94a3b8; 
+  
+  /* Plasma accents */
+  --accent-primary: #00f0ff; /* Plasma Cyan */
+  --accent-secondary: #a855f7; /* Deep Purple */
+  --accent-tertiary: #f97316; /* Neon Orange */
+  
+  --glass-bg: rgba(0, 0, 0, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 30px 60px -15px rgba(0,0,0,0.5);
+  --glass-glow: 0 0 15px rgba(0, 240, 255, 0.15);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-space);
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+  /* Very subtle radial wash */
+  background-image: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.8) 0%, transparent 70%);
+}
+:root.dark body {
+  background-image: none;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 3px;
+}
+
+/* 
+  GRID BACKGROUND 
+  Light Mode: Complex Holographic Hexagonal Grid
+  Dark Mode: Subtle Square Grid
+*/
+.grid-bg-container {
+  position: fixed;
+  inset: -50px; /* Bleed edge for parallax movement */
+  z-index: 0;
+  pointer-events: none;
+}
+
+.grid-bg {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.1s ease-out;
+  /* Light mode hexagon SVG data URI */
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='103.923' viewBox='0 0 60 103.923' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 103.923L0 86.6025V51.9615L30 34.641L60 51.9615V86.6025L30 103.923ZM30 101.614L58 85.447V53.116L30 36.949L2 53.116V85.447L30 101.614ZM30 51.9615L0 34.641V0L30 -17.3205L60 0V34.641L30 51.9615ZM30 49.652L58 33.485V1.155L30 -15.012L2 1.155V33.485L30 49.652Z' fill='rgba(14,165,233,0.1)'/%3E%3C/svg%3E");
+  background-size: 60px 103.923px;
+  mask-image: radial-gradient(circle at center, black 10%, transparent 70%);
+  -webkit-mask-image: radial-gradient(circle at center, black 10%, transparent 70%);
+}
+
+:root.dark .grid-bg {
+  background-image: 
+    linear-gradient(to right, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Scan Line Overlay */
+.scan-line-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(14, 165, 233, 0.08) 51%
+  );
+  background-size: 100% 4px;
+  animation: scan 10s linear infinite;
+  opacity: 0.8;
+}
+:root.dark .scan-line-overlay {
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(255, 255, 255, 0.05) 51%
+  );
+  opacity: 0.3;
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+/* Premium Module Glass */
+.module-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.module-glass:hover {
+  box-shadow: var(--glass-shadow), var(--glass-glow);
+  border-color: var(--accent-primary);
+}
+
+/* Text glow */
+:root.dark .text-glow {
+  text-shadow: 0 0 15px var(--accent-primary);
+}
+:root .text-glow {
+  text-shadow: 0 0 20px rgba(14, 165, 233, 0.6);
+}
