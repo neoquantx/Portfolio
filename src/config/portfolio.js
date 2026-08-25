@@ -3,7 +3,7 @@ export const portfolioData = {
     name: 'Himanshu Nikam',
     title: 'Software Engineer',
     tagline: 'Building the future, one line of code at a time',
-    bio: 'A passionate Computer Science Engineering student at CMRIT, Bengaluru, driven by innovation and a love for building impactful software solutions. From full-stack web applications to algorithm visualizers, I thrive on turning complex ideas into elegant digital experiences.',
+    bio: 'A passionate Computer Science Engineering student driven by innovation and a love for building impactful software solutions. From full-stack web applications to algorithm visualizers, I thrive on turning complex ideas into elegant digital experiences.',
     email: 'himanshunikam1817@gmail.com',
     phone: '+91 8737923714',
     location: 'Bengaluru, Karnataka',
@@ -48,22 +48,47 @@ export const portfolioData = {
     }
   ],
   skills: [
-    { name: 'Java', category: 'language', level: 85 },
-    { name: 'Python', category: 'language', level: 75 },
-    { name: 'C', category: 'language', level: 70 },
-    { name: 'JavaScript', category: 'language', level: 90 },
-    { name: 'React', category: 'framework', level: 85 },
-    { name: 'React Native', category: 'framework', level: 70 },
-    { name: 'Next.js', category: 'framework', level: 65 },
-    { name: 'Node.js', category: 'backend', level: 80 },
-    { name: 'Express.js', category: 'backend', level: 80 },
-    { name: 'MongoDB', category: 'database', level: 75 },
-    { name: 'Firebase', category: 'database', level: 75 },
-    { name: 'SQL', category: 'database', level: 70 },
-    { name: 'HTML/CSS', category: 'frontend', level: 90 },
-    { name: 'Tailwind CSS', category: 'frontend', level: 85 },
-    { name: 'Git/GitHub', category: 'tools', level: 85 },
-    { name: 'REST APIs', category: 'backend', level: 80 }
+    // Frontend
+    { name: 'HTML/CSS', category: 'Frontend', level: 90 },
+    { name: 'JavaScript', category: 'Frontend', level: 90 },
+    { name: 'React.js', category: 'Frontend', level: 85 },
+    { name: 'Tailwind CSS', category: 'Frontend', level: 85 },
+
+    // Backend
+    { name: 'Node.js', category: 'Backend', level: 80 },
+    { name: 'Express.js', category: 'Backend', level: 80 },
+    { name: 'REST APIs', category: 'Backend', level: 80 },
+
+    // Machine Learning & AI
+    { name: 'Python', category: 'ML & AI', level: 75 },
+    { name: 'PyTorch', category: 'ML & AI', level: 60 },
+    { name: 'Scikit-learn', category: 'ML & AI', level: 55 },
+    { name: 'Neural Networks', category: 'ML & AI', level: 55 },
+    { name: 'Computer Vision', category: 'ML & AI', level: 50 },
+    { name: 'Model Training', category: 'ML & AI', level: 55 },
+
+    // Mobile Development
+    { name: 'React Native', category: 'Mobile', level: 70 },
+    { name: 'Expo', category: 'Mobile', level: 65 },
+    { name: 'Mobile UI/UX', category: 'Mobile', level: 65 },
+
+    // Databases & Cloud
+    { name: 'MongoDB', category: 'Cloud & DB', level: 75 },
+    { name: 'Firebase', category: 'Cloud & DB', level: 75 },
+    { name: 'SQL', category: 'Cloud & DB', level: 70 },
+    { name: 'Supabase', category: 'Cloud & DB', level: 50 },
+
+    // DevOps & Deployment
+    { name: 'Git/GitHub', category: 'DevOps', level: 85 },
+    { name: 'CI/CD Pipelines', category: 'DevOps', level: 55 },
+    { name: 'Docker', category: 'DevOps', level: 45 },
+
+    // Core Engineering
+    { name: 'Java', category: 'Core', level: 85 },
+    { name: 'Python', category: 'Core', level: 75 },
+    { name: 'C', category: 'Core', level: 70 },
+    { name: 'DSA', category: 'Core', level: 75 },
+    { name: 'OS Concepts', category: 'Core', level: 65 },
   ],
   timeline: [
     { year: '2020', event: '10th Grade — 88.8%', description: 'Sant Atulanand Residential Academy, Varanasi', type: 'education' },
