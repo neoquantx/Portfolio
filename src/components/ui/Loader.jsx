@@ -24,7 +24,7 @@ const Loader = ({ onComplete }) => {
     <AnimatePresence onExitComplete={onComplete}>
       {!isComplete && (
         <motion.div
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[var(--nano-void)]"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-bg-primary"
           initial={{ opacity: 1 }}
           exit={{ 
             opacity: 0,
@@ -34,21 +34,21 @@ const Loader = ({ onComplete }) => {
           }}
         >
           <div className="w-64 flex flex-col items-start gap-4">
-            <div className="flex justify-between w-full font-mono text-xs text-[var(--nano-muted)] tracking-widest uppercase">
+            <div className="flex justify-between w-full font-mono text-xs text-text-secondary tracking-widest uppercase">
               <span>System Initialization</span>
               <span>{Math.round(progress).toString().padStart(3, '0')}%</span>
             </div>
             
-            <div className="w-full h-[1px] bg-white/10 relative overflow-hidden">
+            <div className="w-full h-[1px] bg-slate-300 dark:bg-white/10 relative overflow-hidden">
               <motion.div 
-                className="absolute top-0 left-0 bottom-0 bg-[var(--nano-glow)] shadow-[0_0_10px_var(--nano-glow)]"
+                className="absolute top-0 left-0 bottom-0 bg-nano-cyan shadow-[0_0_10px_var(--color-nano-cyan)]"
                 initial={{ width: "0%" }}
                 animate={{ width: `${progress}%` }}
                 transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.2 }}
               />
             </div>
             
-            <div className="font-mono text-[10px] text-[var(--nano-text)] opacity-50 tracking-wider h-4">
+            <div className="font-mono text-[10px] text-text-secondary opacity-70 tracking-wider h-4">
               {progress < 25 && "Booting sequence..."}
               {progress >= 25 && progress < 60 && "Establishing neural link..."}
               {progress >= 60 && progress < 95 && "Compiling shaders..."}
