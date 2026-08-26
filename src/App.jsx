@@ -9,8 +9,11 @@ import { useScrollProgress } from './hooks/useScrollProgress';
 import { useMouseParallax } from './hooks/useMouseParallax';
 import { portfolioData } from './config/portfolio';
 
+import { terminalSound } from './utils/terminalSound';
+
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isOverclocked, setIsOverclocked] = useState(false);
   const scrollProgress = useScrollProgress();
   const mousePos = useMouseParallax();
 
@@ -21,6 +24,37 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Keyboard shortcut triggers: Shift + O & Konami Code (Up Up Down Down Left Right Left Right B A)
+  useEffect(() => {
+    const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+    let inputSequence = [];
+
+    const handleKeyDown = (e) => {
+      // 1. Shift + O
+      if (e.shiftKey && (e.key === 'O' || e.key === 'o')) {
+        terminalSound.playBootBleep(3);
+        setIsOverclocked(prev => !prev);
+        return;
+      }
+
+      // 2. Konami Code
+      const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      inputSequence.push(key);
+      if (inputSequence.length > konamiSequence.length) {
+        inputSequence.shift();
+      }
+
+      if (inputSequence.join(',') === konamiSequence.join(',')) {
+        terminalSound.playSuccessChime();
+        setIsOverclocked(prev => !prev);
+        inputSequence = [];
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <>
       {/* 500vh scroll container for the 5 states */}
@@ -28,7 +62,7 @@ export default function App() {
         <Loader isLoading={isLoading} />
 
         {!isLoading && (
-          <>
+          <div className={isOverclocked ? "animate-pulse-fast" : ""}>
             <Cursor />
             <SoundToggle />
             <ThemeToggle />
@@ -48,7 +82,7 @@ export default function App() {
 
             {/* 3D Scene — fixed fullscreen */}
             <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 1 }}>
-              <NanoScene scrollProgress={scrollProgress} mousePos={mousePos} />
+              <NanoScene scrollProgress={scrollProgress} mousePos={mousePos} isOverclocked={isOverclocked} />
             </div>
 
             {/* HTML UI Overlay — fixed, on top of 3D */}
@@ -56,9 +90,11 @@ export default function App() {
               <ZoomController
                 scrollProgress={scrollProgress}
                 portfolioData={portfolioData}
+                isOverclocked={isOverclocked}
+                setIsOverclocked={setIsOverclocked}
               />
             </div>
-          </>
+          </div>
         )}
       </div>
     </>
