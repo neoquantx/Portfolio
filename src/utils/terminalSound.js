@@ -5,6 +5,9 @@ class TerminalSoundSynthesizer {
   constructor() {
     this.ctx = null;
     this.isEnabled = true;
+    this.isDroneActive = false;
+    this.droneGain = null;
+    this.droneOscs = [];
   }
 
   // Safely initialize or resume AudioContext on user interaction
@@ -28,10 +31,152 @@ class TerminalSoundSynthesizer {
     } else {
       this.isEnabled = !this.isEnabled;
     }
+
     if (this.isEnabled) {
       this.playBootBleep(2);
+      this.startAmbientDrone();
+    } else {
+      this.stopAmbientDrone();
     }
     return this.isEnabled;
+  }
+
+  // --- Cybernetic Ambient Drone (Space Hum) ---
+  startAmbientDrone() {
+    if (!this.isEnabled || this.isDroneActive) return;
+    const ctx = this.init();
+    if (!ctx) return;
+
+    try {
+      this.isDroneActive = true;
+      const now = ctx.currentTime;
+
+      // Master Gain for Drone with gentle fade in
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0.0001, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.025, now + 2.0);
+
+      // Low-pass filter to keep it deep, warm, and unobtrusive
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(110, now);
+      filter.Q.setValueAtTime(2.0, now);
+
+      // Dual detuned oscillators for gentle binaural beating (55Hz & 55.4Hz)
+      const osc1 = ctx.createOscillator();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(55, now); // A1 note
+
+      const osc2 = ctx.createOscillator();
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(55.45, now); // Detuned for slow beating
+
+      // LFO for subtle breathing pulse
+      const lfo = ctx.createOscillator();
+      const lfoGain = ctx.createGain();
+      lfo.frequency.setValueAtTime(0.2, now); // 0.2 Hz slow wave
+      lfoGain.gain.setValueAtTime(15, now); // Modulate filter cutoff by ±15Hz
+
+      lfo.connect(filter.frequency);
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(masterGain);
+      masterGain.connect(ctx.destination);
+
+      osc1.start(now);
+      osc2.start(now);
+      lfo.start(now);
+
+      this.droneGain = masterGain;
+      this.droneOscs = [osc1, osc2, lfo];
+    } catch (e) {
+      this.isDroneActive = false;
+    }
+  }
+
+  stopAmbientDrone() {
+    if (!this.isDroneActive || !this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      if (this.droneGain) {
+        this.droneGain.gain.setValueAtTime(this.droneGain.gain.value || 0.025, now);
+        this.droneGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+      }
+      setTimeout(() => {
+        this.droneOscs.forEach(osc => {
+          try { osc.stop(); osc.disconnect(); } catch (err) {}
+        });
+        this.droneOscs = [];
+        this.droneGain = null;
+        this.isDroneActive = false;
+      }, 1300);
+    } catch (e) {
+      this.isDroneActive = false;
+    }
+  }
+
+  // --- Quantum Particle Shockwave Audio Burst ---
+  playShockwaveBurst() {
+    if (!this.isEnabled) return;
+    const ctx = this.init();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+      
+      // 1. Sub-bass pulse
+      const subOsc = ctx.createOscillator();
+      const subGain = ctx.createGain();
+      subOsc.type = 'sine';
+      subOsc.frequency.setValueAtTime(160, now);
+      subOsc.frequency.exponentialRampToValueAtTime(38, now + 0.35);
+
+      subGain.gain.setValueAtTime(0.06, now);
+      subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
+
+      subOsc.connect(subGain);
+      subGain.connect(ctx.destination);
+      subOsc.start(now);
+      subOsc.stop(now + 0.4);
+
+      // 2. High-frequency holographic dispersion shimmer
+      const shimmer = ctx.createOscillator();
+      const shimmerGain = ctx.createGain();
+      shimmer.type = 'triangle';
+      shimmer.frequency.setValueAtTime(800, now);
+      shimmer.frequency.exponentialRampToValueAtTime(2400, now + 0.15);
+
+      shimmerGain.gain.setValueAtTime(0.02, now);
+      shimmerGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+
+      shimmer.connect(shimmerGain);
+      shimmerGain.connect(ctx.destination);
+      shimmer.start(now);
+      shimmer.stop(now + 0.22);
+    } catch (e) {}
+  }
+
+  // --- Subtle UI Hover Tick ---
+  playHoverTick() {
+    if (!this.isEnabled) return;
+    const ctx = this.init();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1400, now);
+      gain.gain.setValueAtTime(0.008, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.02);
+    } catch (e) {}
   }
 
   // 1. Mechanical Sci-Fi Key Click
@@ -152,7 +297,6 @@ class TerminalSoundSynthesizer {
     if (!ctx) return;
 
     try {
-      // Two harsh low frequency bursts
       [0, 0.15].forEach((delay) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
