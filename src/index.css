@@ -16,10 +16,26 @@
   --font-mono: "JetBrains Mono", monospace;
 
   --animate-scanline: scanline 2s linear infinite;
+  --animate-glitch: glitch 0.2s cubic-bezier(.25, .46, .45, .94) both infinite;
+  --animate-pulse-fast: pulse-fast 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 
   @keyframes scanline {
     0% { transform: translateY(-100%); }
     100% { transform: translateY(100%); }
+  }
+
+  @keyframes glitch {
+    0% { transform: translate(0) }
+    20% { transform: translate(-2px, 1px) }
+    40% { transform: translate(-1px, -1px) }
+    60% { transform: translate(2px, 1px) }
+    80% { transform: translate(1px, -2px) }
+    100% { transform: translate(0) }
+  }
+
+  @keyframes pulse-fast {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
   }
 }
 
@@ -35,9 +51,9 @@
   --accent-secondary: #0284c7; /* Sky 600 */
   --accent-tertiary: #3b82f6; /* Blue 500 */
   
-  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.45) 100%);
-  --glass-border: rgba(14, 165, 233, 0.3); /* Ocean blue tinted border */
-  --glass-shadow: 0 20px 40px -10px rgba(14, 165, 233, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
+  --glass-border: rgba(14, 165, 233, 0.35); /* Ocean blue tinted border */
+  --glass-shadow: 0 20px 40px -10px rgba(14, 165, 233, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.7);
   --glass-glow: 0 0 20px rgba(14, 165, 233, 0.2);
   
   background-color: var(--bg-primary);
@@ -57,10 +73,10 @@
   --accent-secondary: #a855f7; /* Deep Purple */
   --accent-tertiary: #f97316; /* Neon Orange */
   
-  --glass-bg: rgba(0, 0, 0, 0.4);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 30px 60px -15px rgba(0,0,0,0.5);
-  --glass-glow: 0 0 15px rgba(0, 240, 255, 0.15);
+  --glass-bg: rgba(2, 6, 23, 0.88); /* Rich slate-950 background for crystal clear text readability */
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 30px 60px -15px rgba(0,0,0,0.7);
+  --glass-glow: 0 0 20px rgba(0, 240, 255, 0.2);
 }
 
 body {
