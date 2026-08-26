@@ -107,10 +107,50 @@ export const portfolioData = {
     { name: 'Machine Learning for All', issuer: 'Coursera', date: 'October 2025' }
   ],
   hackathons: [
-    'Smart India Hackathon (SIH) 2024',
-    'Vyuhatech Hackathon 2025',
-    'Smart India Hackathon (SIH) 2025',
-    'DSA Hackathon — CMRIT CSE 2025',
-    'Meta PyTorch OpenEnv Hackathon X Scaler 2026'
+    {
+      id: 'sih-2024',
+      title: 'Smart India Hackathon (SIH) 2024',
+      role: 'Participant',
+      description: 'National level hackathon organized by MoE. Built innovative solutions for real-world problem statements under time constraints.',
+      tags: ['Problem Solving', 'Teamwork', 'Innovation'],
+      certificate_url: null, // TODO: Add your certificate image path here (e.g., '/certificates/sih-2024.jpg')
+      date: '2024'
+    },
+    {
+      id: 'vyuhatech-2025',
+      title: 'Vyuhatech Hackathon 2025',
+      role: 'Participant',
+      description: 'Intense technical hackathon focused on modern web and cloud technologies. Prototyped full-stack applications.',
+      tags: ['Web Dev', 'Rapid Prototyping'],
+      certificate_url: null, // TODO: Add your certificate image path here
+      date: '2025'
+    },
+    {
+      id: 'sih-2025',
+      title: 'Smart India Hackathon (SIH) 2025',
+      role: 'Participant',
+      description: 'Continuing the journey of solving complex national challenges through scalable system design and architecture.',
+      tags: ['Full Stack', 'System Design'],
+      certificate_url: null, // TODO: Add your certificate image path here
+      date: '2025'
+    },
+    {
+      id: 'dsa-2025',
+      title: 'DSA Hackathon — CMRIT CSE 2025',
+      role: 'Competitor',
+      description: 'College-level competitive programming hackathon focusing on Data Structures and Algorithms optimization.',
+      tags: ['Algorithms', 'Data Structures', 'Logic'],
+      certificate_url: null, // TODO: Add your certificate image path here
+      date: '2025'
+    },
+    {
+      id: 'meta-pytorch-2026',
+      title: 'Meta PyTorch OpenEnv Hackathon X Scaler 2026',
+      role: 'Participant',
+      description: 'Advanced machine learning hackathon building AI environments and models utilizing the PyTorch ecosystem.',
+      tags: ['PyTorch', 'Machine Learning', 'AI'],
+      certificate_url: null, // TODO: Add your certificate image path here
+      date: '2026'
+    }
   ]
 };
