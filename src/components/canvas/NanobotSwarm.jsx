@@ -4,7 +4,13 @@ import * as THREE from 'three';
 import { useTheme } from '../../context/ThemeContext';
 import { terminalSound } from '../../utils/terminalSound';
 
-const PARTICLE_COUNT = 9000;
+const PARTICLE_COUNT = 8500;
+
+// Scratch vectors to eliminate GC pauses
+const _scratchVec = new THREE.Vector3();
+const _scratchDir = new THREE.Vector3();
+const _scratchWorldMouse = new THREE.Vector3();
+const _scratchLocalMouse = new THREE.Vector3();
 
 const vertexShader = `
 uniform float uTime;
@@ -14,48 +20,64 @@ uniform vec3 uColorLight;
 uniform vec3 uColorOverclock;
 uniform float uIsDark;
 uniform float uOverclock;
+uniform float uAudioReact;
 
-// 3D Graviton & Shockwave Uniforms (in local object coordinates)
+// 3D Graviton & Shockwave Uniforms
 uniform vec3 uMousePos3D;
 uniform float uMouseActive;
 uniform vec3 uShockwavePos;
 uniform float uShockwaveTime;
 
-attribute vec3 pos0; // Cloud (Lvl 1)
-attribute vec3 pos1; // Hex Shield (Lvl 2)
-attribute vec3 pos2; // Double Helix (Lvl 3 & 4)
-attribute vec3 pos3; // Core Orb (Lvl 5)
+attribute vec3 pos0; // 3D Cosmic Cloud (Lvl 1)
+attribute vec3 pos1; // 3D Hex Matrix & Shield (Lvl 2)
+attribute vec3 pos2; // 3D Double Helix & Stream (Lvl 3 & 4)
+attribute vec3 pos3; // 3D Quantum Core Sphere & Ring (Lvl 5)
+attribute float aSize;  // Particle size variance
+attribute float aSpeed; // Individual orbital speed
 
 varying vec3 vColor;
 varying float vAlpha;
 
 void main() {
-  // Morph between states based on uMorphProgress (0.0 to 3.0)
   float stage = clamp(uMorphProgress, 0.0, 3.0);
   
+  // 1. Volumetric 3D morphing between geometric states
   vec3 currentPos;
   if (stage < 1.0) {
-    currentPos = mix(pos0, pos1, stage);
+    currentPos = mix(pos0, pos1, smoothstep(0.0, 1.0, stage));
   } else if (stage < 2.0) {
-    currentPos = mix(pos1, pos2, stage - 1.0);
+    currentPos = mix(pos1, pos2, smoothstep(0.0, 1.0, stage - 1.0));
   } else {
-    currentPos = mix(pos2, pos3, stage - 2.0);
+    currentPos = mix(pos2, pos3, smoothstep(0.0, 1.0, stage - 2.0));
   }
   
-  // Base fluid floating motion
-  float timeSpeed = mix(1.0, 2.5, uOverclock);
-  currentPos.y += sin(uTime * 0.5 * timeSpeed + currentPos.x * 0.2) * 0.6;
-  currentPos.x += cos(uTime * 0.3 * timeSpeed + currentPos.y * 0.2) * 0.6;
+  // 2. Smooth, continuous 3D orbital evolution (NO disco jitter, NO in-out bouncing)
+  // Particles evolve gracefully in true 3D orbital space
+  float orbitAngle = uTime * (0.04 + aSpeed * 0.04) * mix(1.0, 2.2, uOverclock);
+  float cosA = cos(orbitAngle);
+  float sinA = sin(orbitAngle);
   
-  // Pure Original Colors (No muddy secondary mix in Dark Mode!)
+  // Circular 3D orbital flow
+  vec3 evolvedPos = currentPos;
+  evolvedPos.x = currentPos.x * cosA - currentPos.z * sinA;
+  evolvedPos.z = currentPos.x * sinA + currentPos.z * cosA;
+  
+  // Gentle vertical wave drift
+  evolvedPos.y += sin(uTime * 0.3 + aSpeed * 6.28) * 0.4;
+
+  // 3. Subtle audio bass reactivity (controlled, smooth pulse)
+  float audioExpansion = uAudioReact * 3.0 * (1.0 + uOverclock * 0.5);
+  evolvedPos += normalize(evolvedPos + vec3(0.0001)) * audioExpansion;
+
+  // 4. Pure signature color: Plasma Cyan (#00f0ff) in dark mode, Ocean Blue (#0284c7) in light mode
   vec3 baseColor = mix(uColorLight, uColorDark, uIsDark);
   baseColor = mix(baseColor, uColorOverclock, uOverclock);
 
-  // --- 1. MOUSE GRAVITON REPULSION ---
+  // 5. Gravitational mouse interaction (smooth, elegant 3D space warp)
   if (uMouseActive > 0.5) {
-    vec3 toMouse = currentPos - uMousePos3D;
+    vec3 toMouse = evolvedPos - uMousePos3D;
     float distToMouse = length(toMouse);
-    float mouseRadius = 22.0;
+    float mouseRadius = 24.0;
     
     if (distToMouse < mouseRadius) {
       float normDist = distToMouse / mouseRadius;
@@ -63,19 +85,18 @@ void main() {
       vec3 repelDir = normalize(toMouse + vec3(0.0001));
       vec3 swirlDir = vec3(-repelDir.y, repelDir.x, repelDir.z * 0.2);
       
-      currentPos += (repelDir * 11.0 + swirlDir * 3.5) * force;
+      evolvedPos += (repelDir * 7.0 + swirlDir * 3.0) * force;
       
       if (uIsDark > 0.5) {
-        baseColor += vec3(0.2, 0.6, 0.8) * force * 1.2;
+        baseColor = mix(baseColor, vec3(1.0, 1.0, 1.0), force * 0.7);
       }
     }
   }
 
-  // --- 2. CLICK SHOCKWAVE HARMONIC RIPPLE ---
+  // 6. Click Shockwave Wavefront
   if (uShockwaveTime > 0.0 && uShockwaveTime < 1.0) {
-    float waveDist = length(currentPos - uShockwavePos);
-    float waveProgress = sin(uShockwaveTime * 1.5707963);
-    float waveRadius = waveProgress * 60.0;
+    float waveDist = length(evolvedPos - uShockwavePos);
+    float waveRadius = sin(uShockwaveTime * 1.5707963) * 60.0;
     float waveWidth = 14.0;
     float distDelta = abs(waveDist - waveRadius);
     
@@ -83,31 +104,30 @@ void main() {
       float waveNorm = 1.0 - (distDelta / waveWidth);
       float waveFade = 1.0 - uShockwaveTime;
       float ripple = sin(waveNorm * 3.1415926) * waveNorm * waveFade;
-      vec3 pushDir = normalize(currentPos - uShockwavePos + vec3(0.0001));
+      vec3 pushDir = normalize(evolvedPos - uShockwavePos + vec3(0.0001));
       
-      currentPos += pushDir * ripple * 14.0;
-      currentPos.z += ripple * 18.0;
+      evolvedPos += pushDir * ripple * 14.0;
       
       if (uIsDark > 0.5) {
-        baseColor += vec3(0.4, 0.8, 1.0) * ripple * 2.0;
+        baseColor = mix(baseColor, vec3(1.0, 1.0, 1.0), ripple * 0.9);
       }
     }
   }
 
-  vec4 mvPosition = modelViewMatrix * vec4(currentPos, 1.0);
+  vec4 mvPosition = modelViewMatrix * vec4(evolvedPos, 1.0);
   
-  // --- MEDIUM PARTICLE SIZE WITH BALANCED CLAMP (8px - 26px) ---
-  float pSize = (320.0 / -mvPosition.z);
-  gl_PointSize = clamp(pSize, 7.5, 26.0);
+  // 7. STEADY, SMOOTH POINT SIZE (Physical depth perspective only - NO disco size strobing!)
+  float pSize = (280.0 / -mvPosition.z) * aSize;
+  gl_PointSize = clamp(pSize, 2.5, 14.0);
   
   gl_Position = projectionMatrix * mvPosition;
   
-  // Extended depth shading
-  float depth = smoothstep(15.0, -50.0, mvPosition.z);
+  // 8. Depth shading: atmospheric depth falloff
+  float depth = smoothstep(5.0, -50.0, mvPosition.z);
   
   if (uIsDark > 0.5) {
-    vColor = mix(baseColor * 0.3, baseColor, depth);
-    vAlpha = depth * 0.8 + 0.2;
+    vColor = mix(baseColor * 0.4, baseColor, depth);
+    vAlpha = depth * 0.85 + 0.15;
   } else {
     vColor = baseColor;
     vAlpha = clamp(depth * 0.75 + 0.25, 0.25, 0.9);
@@ -122,26 +142,26 @@ varying float vAlpha;
 
 void main() {
   vec2 xy = gl_PointCoord.xy - vec2(0.5);
-  float ll = length(xy);
-  if (ll > 0.5) discard;
+  float dist = length(xy);
+  if (dist > 0.5) discard;
   
-  float glow = smoothstep(0.5, 0.0, ll);
-  float core = smoothstep(0.18, 0.0, ll) * 0.6;
+  // Crisp brilliant quantum core + soft neon glow
+  float core = smoothstep(0.18, 0.0, dist) * 0.8;
+  float glow = smoothstep(0.5, 0.0, dist);
   
   if (uIsDark > 0.5) {
-    // Pure glowing neon orb in Dark Mode
-    gl_FragColor = vec4(vColor + vec3(core), vAlpha * glow);
+    // Pure Plasma Cyan with brilliant white core
+    vec3 finalColor = vColor + vec3(core);
+    gl_FragColor = vec4(finalColor, glow * vAlpha);
   } else {
-    // Crisp soft blue orb in Light Mode
-    float alpha = smoothstep(0.5, 0.05, ll) * vAlpha;
+    // Crisp Ocean Blue in Light Mode
+    float alpha = smoothstep(0.5, 0.05, dist) * vAlpha;
     gl_FragColor = vec4(vColor, alpha);
   }
 }
 `;
 
 export default function NanobotSwarm({ 
-  scrollProgress = 0, 
-  mousePos = {x: 0, y: 0},
   isOverclocked = false 
 }) {
   const currentProgress = useRef(0);
@@ -154,22 +174,23 @@ export default function NanobotSwarm({
   const shockwaveRef = useRef({
     time: 0.0,
     active: false,
-    localPos: new THREE.Vector3(0, 0, -18)
+    localPos: new THREE.Vector3(0, 0, 0)
   });
   
-  const smoothMouseLocal = useRef(new THREE.Vector3(0, 0, -18));
+  const smoothMouseLocal = useRef(new THREE.Vector3(0, 0, 0));
 
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
     uMorphProgress: { value: 0 },
     uIsDark: { value: 1.0 },
     uOverclock: { value: 0.0 },
+    uAudioReact: { value: 0.0 },
     uColorDark: { value: new THREE.Color('#00f0ff') },       // Pure Original Plasma Cyan
     uColorLight: { value: new THREE.Color('#0284c7') },      // Ocean Cyan / Sky Blue
     uColorOverclock: { value: new THREE.Color('#ff0055') },  // Turbo Neon Red
-    uMousePos3D: { value: new THREE.Vector3(0, 0, -18) },
+    uMousePos3D: { value: new THREE.Vector3(0, 0, 0) },
     uMouseActive: { value: 0.0 },
-    uShockwavePos: { value: new THREE.Vector3(0, 0, -18) },
+    uShockwavePos: { value: new THREE.Vector3(0, 0, 0) },
     uShockwaveTime: { value: 0.0 }
   }), []);
 
@@ -207,83 +228,91 @@ export default function NanobotSwarm({
   }, []);
 
   const geometryData = useMemo(() => {
-    const pos0 = new Float32Array(PARTICLE_COUNT * 3); // Lvl 1: Cloud
-    const pos1 = new Float32Array(PARTICLE_COUNT * 3); // Lvl 2: Wide Shield Lattice
-    const pos2 = new Float32Array(PARTICLE_COUNT * 3); // Lvl 3 & 4: Double Helix & Outer Ring
-    const pos3 = new Float32Array(PARTICLE_COUNT * 3); // Lvl 5: Wide Orbiting Sphere & Rings
+    const pos0 = new Float32Array(PARTICLE_COUNT * 3);
+    const pos1 = new Float32Array(PARTICLE_COUNT * 3);
+    const pos2 = new Float32Array(PARTICLE_COUNT * 3);
+    const pos3 = new Float32Array(PARTICLE_COUNT * 3);
+    const aSize = new Float32Array(PARTICLE_COUNT);
+    const aSpeed = new Float32Array(PARTICLE_COUNT);
 
-    // Target 0: Random Cloud (Surface / Hero)
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const r = 36 * Math.cbrt(Math.random());
-      const theta = Math.random() * 2 * Math.PI;
-      const phi = Math.acos(2 * Math.random() - 1);
-      pos0[i*3] = r * Math.sin(phi) * Math.cos(theta);
-      pos0[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-      pos0[i*3+2] = r * Math.cos(phi) - 16;
+      aSize[i] = 0.7 + Math.random() * 0.6;
+      aSpeed[i] = 0.5 + Math.random() * 0.8;
+
+      // 1. State 0 (Level 1): Volumetric 3D Quantum Cloud (Centered at 0, 0, 0)
+      const r0 = 32.0 * Math.cbrt(Math.random());
+      const theta0 = Math.random() * 2.0 * Math.PI;
+      const phi0 = Math.acos(2.0 * Math.random() - 1.0);
+      pos0[i * 3]     = r0 * Math.sin(phi0) * Math.cos(theta0);
+      pos0[i * 3 + 1] = r0 * Math.sin(phi0) * Math.sin(theta0);
+      pos0[i * 3 + 2] = r0 * Math.cos(phi0);
+
+      // 2. State 1 (Level 2): 3D Hex Matrix & Shield Volume (Centered at 0, 0, 0)
+      const r1 = 30.0 * Math.sqrt(Math.random());
+      const angle1 = Math.random() * 2.0 * Math.PI;
+      pos1[i * 3]     = r1 * Math.cos(angle1);
+      pos1[i * 3 + 1] = r1 * Math.sin(angle1) * 0.85;
+      pos1[i * 3 + 2] = (Math.random() - 0.5) * 18.0;
+
+      // 3. State 2 (Level 3 & 4): 3D Double Helix & Stream (Centered at 0, 0, 0)
+      const t = (i / PARTICLE_COUNT) * Math.PI * 8.0;
+      const strand = (i % 2 === 0) ? 1.0 : -1.0;
+      const helixRadius = 18.0 + (Math.random() - 0.5) * 4.0;
+      pos2[i * 3]     = Math.cos(t + (strand === 1.0 ? 0.0 : Math.PI)) * helixRadius + (Math.random() - 0.5) * 3.0;
+      pos2[i * 3 + 1] = ((i / PARTICLE_COUNT) - 0.5) * 46.0 + (Math.random() - 0.5) * 3.0;
+      pos2[i * 3 + 2] = Math.sin(t + (strand === 1.0 ? 0.0 : Math.PI)) * helixRadius + (Math.random() - 0.5) * 3.0;
+
+      // 4. State 3 (Level 5): 3D Quantum Core Sphere with Orbiting Equatorial Ring (Centered at 0, 0, 0)
+      if (i < PARTICLE_COUNT * 0.65) {
+        const r3 = 20.0 * Math.cbrt(Math.random());
+        const theta3 = Math.random() * 2.0 * Math.PI;
+        const phi3 = Math.acos(2.0 * Math.random() - 1.0);
+        pos3[i * 3]     = r3 * Math.sin(phi3) * Math.cos(theta3);
+        pos3[i * 3 + 1] = r3 * Math.sin(phi3) * Math.sin(theta3);
+        pos3[i * 3 + 2] = r3 * Math.cos(phi3);
+      } else {
+        const ringRadius = 24.0 + Math.random() * 8.0;
+        const ringAngle = Math.random() * 2.0 * Math.PI;
+        pos3[i * 3]     = Math.cos(ringAngle) * ringRadius;
+        pos3[i * 3 + 1] = (Math.random() - 0.5) * 3.0;
+        pos3[i * 3 + 2] = Math.sin(ringAngle) * ringRadius;
+      }
     }
 
-    // Target 1: Hex Shield Lattice (Lvl 2) - Frames bio card nicely
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const radius = 28 * Math.sqrt(Math.random());
-      const angle = Math.random() * 2 * Math.PI;
-      pos1[i*3] = radius * Math.cos(angle);
-      pos1[i*3+1] = radius * Math.sin(angle);
-      pos1[i*3+2] = (Math.random() - 0.5) * 6 - 15;
-    }
-
-    // Target 2: Double Helix & Constellation (Lvl 3 & 4)
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const t = (i / PARTICLE_COUNT) * Math.PI * 8;
-      const strand = i % 2 === 0 ? 1 : -1;
-      const radius = 18 + (Math.random() - 0.5) * 4;
-      pos2[i*3] = Math.cos(t + (strand === 1 ? 0 : Math.PI)) * radius;
-      pos2[i*3+1] = ((i / PARTICLE_COUNT) - 0.5) * 44;
-      pos2[i*3+2] = Math.sin(t + (strand === 1 ? 0 : Math.PI)) * radius - 16;
-      
-      pos2[i*3] += (Math.random() - 0.5) * 2;
-      pos2[i*3+1] += (Math.random() - 0.5) * 2;
-      pos2[i*3+2] += (Math.random() - 0.5) * 2;
-    }
-
-    // Target 3: Orbiting Quantum Core Sphere (Lvl 5)
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const r = 22 * Math.cbrt(Math.random());
-      const theta = Math.random() * 2 * Math.PI;
-      const phi = Math.acos(2 * Math.random() - 1);
-      pos3[i*3] = r * Math.sin(phi) * Math.cos(theta);
-      pos3[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-      pos3[i*3+2] = r * Math.cos(phi) - 16;
-    }
-
-    return { pos0, pos1, pos2, pos3 };
+    return { pos0, pos1, pos2, pos3, aSize, aSpeed };
   }, []);
 
-  useFrame((state, delta) => {
+  useFrame((state) => {
     if (!pointsRef.current || !pointsRef.current.material) return;
     
-    // 1. Unproject window mouse coords to 3D world space
-    const vector = new THREE.Vector3(windowMouseNorm.current.x, windowMouseNorm.current.y, 0.5);
-    vector.unproject(state.camera);
-    const dir = vector.sub(state.camera.position).normalize();
+    // 1. Unproject mouse coordinates into 3D world space, then to local space
+    _scratchVec.set(windowMouseNorm.current.x, windowMouseNorm.current.y, 0.5);
+    _scratchVec.unproject(state.camera);
+    _scratchDir.copy(_scratchVec).sub(state.camera.position).normalize();
+    
+    // Target plane at center of points group (z = -16)
     const targetZ = -16;
-    const distToPlane = (targetZ - state.camera.position.z) / (dir.z || 0.0001);
-    const worldMouse = state.camera.position.clone().add(dir.multiplyScalar(distToPlane));
+    const distToPlane = (targetZ - state.camera.position.z) / (_scratchDir.z || 0.0001);
+    _scratchWorldMouse.copy(state.camera.position).add(_scratchDir.multiplyScalar(distToPlane));
 
-    // 2. Convert to local object space
-    const localMouseTarget = worldMouse.clone();
-    pointsRef.current.worldToLocal(localMouseTarget);
-    smoothMouseLocal.current.lerp(localMouseTarget, 0.22);
+    _scratchLocalMouse.copy(_scratchWorldMouse);
+    pointsRef.current.worldToLocal(_scratchLocalMouse);
+    smoothMouseLocal.current.lerp(_scratchLocalMouse, 0.18);
 
-    // Animate morph progress smoothly
+    // 2. Local scroll progress
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrollProgress = scrollHeight > 0 ? window.scrollY / scrollHeight : 0;
+
+    // Smooth responsive morphing (0.12)
     currentProgress.current = THREE.MathUtils.lerp(
       currentProgress.current,
       scrollProgress * 3.0,
-      0.06
+      0.12
     );
 
-    // Update shockwave time progress
+    // Shockwave progression
     if (shockwaveRef.current.active) {
-      shockwaveRef.current.time += delta * 0.75;
+      shockwaveRef.current.time += 0.016 * 0.85;
       if (shockwaveRef.current.time >= 1.0) {
         shockwaveRef.current.time = 0.0;
         shockwaveRef.current.active = false;
@@ -305,20 +334,30 @@ export default function NanobotSwarm({
     matUniforms.uShockwavePos.value.copy(shockwaveRef.current.localPos);
     matUniforms.uShockwaveTime.value = shockwaveRef.current.time;
     
-    // Smooth continuous rotation
-    const rotSpeed = isOverclocked ? 0.12 : 0.04;
-    pointsRef.current.rotation.x = state.clock.elapsedTime * rotSpeed + (mousePos?.y || 0) * 0.12;
-    pointsRef.current.rotation.y = state.clock.elapsedTime * (rotSpeed * 1.6) + (mousePos?.x || 0) * 0.12;
+    // Smooth audio reactivity integration
+    const rawAudio = terminalSound.getFrequencyData() || 0;
+    matUniforms.uAudioReact.value = THREE.MathUtils.lerp(
+      matUniforms.uAudioReact.value,
+      rawAudio,
+      0.2
+    );
+    
+    // Smooth 3D rotation centered on the swarm itself
+    const rotSpeed = isOverclocked ? 0.08 : 0.03;
+    pointsRef.current.rotation.x = state.clock.elapsedTime * rotSpeed + windowMouseNorm.current.y * 0.1;
+    pointsRef.current.rotation.y = state.clock.elapsedTime * (rotSpeed * 1.5) + windowMouseNorm.current.x * 0.1;
   });
 
   return (
-    <points ref={pointsRef}>
+    <points ref={pointsRef} position={[0, 0, -16]}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" count={PARTICLE_COUNT} array={geometryData.pos0} itemSize={3} />
         <bufferAttribute attach="attributes-pos0" count={PARTICLE_COUNT} array={geometryData.pos0} itemSize={3} />
         <bufferAttribute attach="attributes-pos1" count={PARTICLE_COUNT} array={geometryData.pos1} itemSize={3} />
         <bufferAttribute attach="attributes-pos2" count={PARTICLE_COUNT} array={geometryData.pos2} itemSize={3} />
         <bufferAttribute attach="attributes-pos3" count={PARTICLE_COUNT} array={geometryData.pos3} itemSize={3} />
+        <bufferAttribute attach="attributes-aSize" count={PARTICLE_COUNT} array={geometryData.aSize} itemSize={1} />
+        <bufferAttribute attach="attributes-aSpeed" count={PARTICLE_COUNT} array={geometryData.aSpeed} itemSize={1} />
       </bufferGeometry>
       <shaderMaterial
         vertexShader={vertexShader}
@@ -331,3 +370,5 @@ export default function NanobotSwarm({
     </points>
   );
 }
+
+
