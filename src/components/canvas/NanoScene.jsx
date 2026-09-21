@@ -4,14 +4,14 @@ import PostProcessing from './PostProcessing';
 import NanobotSwarm from './NanobotSwarm';
 import { useTheme } from '../../context/ThemeContext';
 
-export default function NanoScene({ scrollProgress, mousePos, isOverclocked }) {
+export default function NanoScene({ isOverclocked }) {
   const { isDark } = useTheme();
 
   return (
     <Canvas
       camera={{ position: [0, 0, 15], fov: 45 }}
       style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
-      dpr={[1, 2]}
+      dpr={[1, 1.5]}
       gl={{ alpha: true, antialias: false, powerPreference: "high-performance" }} 
     >
       {/* Background color only in dark mode. Light mode handles it via CSS. */}
@@ -30,13 +30,11 @@ export default function NanoScene({ scrollProgress, mousePos, isOverclocked }) {
 
       {/* The 3D swarm floating */}
       <NanobotSwarm 
-        scrollProgress={scrollProgress} 
-        mousePos={mousePos} 
         isOverclocked={isOverclocked}
       />
 
-      {/* Post Processing - adjust bloom for light/dark */}
-      <PostProcessing bloomIntensity={isDark ? 0.8 : 0.4} />
+      {/* Post Processing - adjust bloom for light/dark. Noise disabled for massive FPS boost. */}
+      <PostProcessing bloomIntensity={isDark ? 0.8 : 0.4} enableNoise={false} />
     </Canvas>
   );
 }
