@@ -8,6 +8,8 @@ class TerminalSoundSynthesizer {
     this.isDroneActive = false;
     this.droneGain = null;
     this.droneOscs = [];
+    this.analyser = null;
+    this.dataArray = null;
   }
 
   // Safely initialize or resume AudioContext on user interaction
@@ -17,12 +19,24 @@ class TerminalSoundSynthesizer {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) {
         this.ctx = new AudioCtx();
+        this.analyser = this.ctx.createAnalyser();
+        this.analyser.fftSize = 64;
+        this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+        this.analyser.connect(this.ctx.destination);
       }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
     }
     return this.ctx;
+  }
+
+  getFrequencyData() {
+    if (!this.analyser || !this.dataArray) return 0;
+    this.analyser.getByteFrequencyData(this.dataArray);
+    // Get average of the lowest frequencies to use as "bass"
+    const sum = this.dataArray.slice(0, 4).reduce((a, b) => a + b, 0);
+    return (sum / 4) / 255.0; // Normalized 0.0 to 1.0
   }
 
   toggleSound(forceState) {
@@ -81,7 +95,7 @@ class TerminalSoundSynthesizer {
       osc1.connect(filter);
       osc2.connect(filter);
       filter.connect(masterGain);
-      masterGain.connect(ctx.destination);
+      masterGain.connect(this.analyser);
 
       osc1.start(now);
       osc2.start(now);
@@ -135,7 +149,7 @@ class TerminalSoundSynthesizer {
       subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
 
       subOsc.connect(subGain);
-      subGain.connect(ctx.destination);
+      subGain.connect(this.analyser);
       subOsc.start(now);
       subOsc.stop(now + 0.4);
 
@@ -150,7 +164,7 @@ class TerminalSoundSynthesizer {
       shimmerGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
 
       shimmer.connect(shimmerGain);
-      shimmerGain.connect(ctx.destination);
+      shimmerGain.connect(this.analyser);
       shimmer.start(now);
       shimmer.stop(now + 0.22);
     } catch (e) {}
@@ -173,7 +187,7 @@ class TerminalSoundSynthesizer {
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(this.analyser);
       osc.start(now);
       osc.stop(now + 0.02);
     } catch (e) {}
@@ -200,7 +214,7 @@ class TerminalSoundSynthesizer {
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(this.analyser);
 
       osc.start(now);
       osc.stop(now + 0.03);
@@ -229,7 +243,7 @@ class TerminalSoundSynthesizer {
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(this.analyser);
 
       osc.start(now);
       osc.stop(now + 0.09);
@@ -255,7 +269,7 @@ class TerminalSoundSynthesizer {
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(this.analyser);
 
       osc.start(now);
       osc.stop(now + 0.07);
@@ -282,7 +296,7 @@ class TerminalSoundSynthesizer {
         gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
 
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(this.analyser);
 
         osc.start(now);
         osc.stop(now + 0.4);
@@ -310,7 +324,7 @@ class TerminalSoundSynthesizer {
         gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
 
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(this.analyser);
 
         osc.start(now);
         osc.stop(now + 0.13);
@@ -338,7 +352,7 @@ class TerminalSoundSynthesizer {
         gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
 
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(this.analyser);
 
         osc.start(t);
         osc.stop(t + 0.035);
