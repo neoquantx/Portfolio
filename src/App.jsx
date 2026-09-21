@@ -5,45 +5,43 @@ import SoundToggle from './components/ui/SoundToggle';
 import ThemeToggle from './components/ui/ThemeToggle';
 import ZoomController from './components/layout/ZoomController';
 import NanoScene from './components/canvas/NanoScene';
-import { useScrollProgress } from './hooks/useScrollProgress';
+import TerminalEasterEgg from './components/ui/TerminalEasterEgg';
 import { useMouseParallax } from './hooks/useMouseParallax';
 import { portfolioData } from './config/portfolio';
-
 import { terminalSound } from './utils/terminalSound';
+
+// Isolated component so mouse moves don't re-render the whole App
+function GridBackground() {
+  const bgRef = React.useRef(null);
+  useMouseParallax(bgRef, 0.08, -20);
+  return (
+    <div className="grid-bg-container">
+      <div
+        ref={bgRef}
+        className="grid-bg"
+      />
+    </div>
+  );
+}
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isOverclocked, setIsOverclocked] = useState(false);
-  const scrollProgress = useScrollProgress();
-  const mousePos = useMouseParallax();
 
+  // Keyboard shortcuts: Shift+O and Konami Code
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 2800);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Keyboard shortcut triggers: Shift + O & Konami Code (Up Up Down Down Left Right Left Right B A)
-  useEffect(() => {
-    const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+    const konamiSequence = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
     let inputSequence = [];
 
     const handleKeyDown = (e) => {
-      // 1. Shift + O
       if (e.shiftKey && (e.key === 'O' || e.key === 'o')) {
         terminalSound.playBootBleep(3);
         setIsOverclocked(prev => !prev);
         return;
       }
-
-      // 2. Konami Code
       const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
       inputSequence.push(key);
-      if (inputSequence.length > konamiSequence.length) {
-        inputSequence.shift();
-      }
-
+      if (inputSequence.length > konamiSequence.length) inputSequence.shift();
       if (inputSequence.join(',') === konamiSequence.join(',')) {
         terminalSound.playSuccessChime();
         setIsOverclocked(prev => !prev);
@@ -57,45 +55,52 @@ export default function App() {
 
   return (
     <>
-      {/* 500vh scroll container for the 5 states */}
+      {/* Loader — z-index 9999, on top of everything */}
+      {isLoading && <Loader onComplete={() => setIsLoading(false)} />}
+
+      {/* Main app — always in DOM but hidden behind loader */}
       <div style={{ height: '500vh' }}>
-        <Loader isLoading={isLoading} />
+        <div className={isOverclocked ? 'animate-pulse-fast' : ''}>
 
-        {!isLoading && (
-          <div className={isOverclocked ? "animate-pulse-fast" : ""}>
-            <Cursor />
-            <SoundToggle />
-            <ThemeToggle />
+          {/* UI elements — only show after load to prevent click-through */}
+          {!isLoading && (
+            <>
+              <Cursor />
+              <SoundToggle />
+              <ThemeToggle />
+            </>
+          )}
 
-            {/* Scan line overlay */}
-            <div className="scan-line-overlay" />
+          {/* Scan line overlay */}
+          <div className="scan-line-overlay" style={{ zIndex: 5 }} />
 
-            {/* Subtle grid background with mouse parallax */}
-            <div className="grid-bg-container">
-              <div 
-                className="grid-bg" 
-                style={{ 
-                  transform: `translate(${mousePos.x * -20}px, ${mousePos.y * -20}px)` 
-                }} 
-              />
-            </div>
+          {/* Grid parallax background — z-index 0 */}
+          <GridBackground />
 
-            {/* 3D Scene — fixed fullscreen */}
-            <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 1 }}>
-              <NanoScene scrollProgress={scrollProgress} mousePos={mousePos} isOverclocked={isOverclocked} />
-            </div>
+          {/* 3D Canvas — z-index 1 */}
+          <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 1 }}>
+            <NanoScene isOverclocked={isOverclocked} />
+          </div>
 
-            {/* HTML UI Overlay — fixed, on top of 3D */}
+          {/* HTML UI overlay — z-index 10 */}
+          {!isLoading && (
             <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 10 }}>
               <ZoomController
-                scrollProgress={scrollProgress}
                 portfolioData={portfolioData}
                 isOverclocked={isOverclocked}
                 setIsOverclocked={setIsOverclocked}
               />
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Terminal Easter Egg — z-index 20, above UI but below modals */}
+          {!isLoading && (
+            <div style={{ zIndex: 20 }}>
+              <TerminalEasterEgg setIsOverclocked={setIsOverclocked} />
+            </div>
+          )}
+
+        </div>
       </div>
     </>
   );
