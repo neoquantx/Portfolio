@@ -46,7 +46,7 @@ const TrophyVaultModal = ({ isOpen, onClose }) => {
           }`}
         >
           {/* Header (Mobile) / Sidebar */}
-          <div className={`md:w-1/3 border-b md:border-b-0 md:border-r flex flex-col transition-colors ${
+          <div className={`md:w-1/3 border-b md:border-b-0 md:border-r flex flex-col max-h-[38vh] md:max-h-none transition-colors ${
             isDark ? 'border-cyan-500/20 bg-slate-900/60' : 'border-sky-500/20 bg-slate-100/90'
           }`}>
             <div className={`p-5 sm:p-6 border-b flex justify-between items-center ${
@@ -263,19 +263,28 @@ const TrophyVaultModal = ({ isOpen, onClose }) => {
                               </div>
                             </>
                           ) : (
-                            <div className="text-center p-6 flex flex-col items-center">
-                              <div className={`w-14 h-14 rounded-full border-2 border-dashed flex items-center justify-center mb-3 ${
-                                isDark ? 'border-slate-700 text-slate-600' : 'border-slate-300 text-slate-400'
+                            <div className="text-center p-6 flex flex-col items-center gap-3">
+                              {/* Redacted certificate design */}
+                              <div className={`w-full max-w-[280px] aspect-video rounded-lg border-2 border-dashed relative overflow-hidden ${
+                                isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-300 bg-slate-50'
                               }`}>
-                                <Award className="w-7 h-7" />
+                                {/* Fake certificate lines */}
+                                {[70, 45, 55, 38, 62].map((w, i) => (
+                                  <div key={i} className={`absolute h-2 rounded-full ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}
+                                    style={{ top: `${20 + i * 14}%`, left: '10%', width: `${w}%` }} />
+                                ))}
+                                {/* CLASSIFIED stamp */}
+                                <div className={`absolute inset-0 flex items-center justify-center`}>
+                                  <div className={`border-2 rounded px-4 py-1 rotate-[-12deg] font-mono font-black text-xs tracking-[0.3em] ${
+                                    isDark ? 'border-cyan-500/50 text-cyan-500/60' : 'border-sky-400/60 text-sky-500/70'
+                                  }`}>
+                                    PENDING UPLOAD
+                                  </div>
+                                </div>
                               </div>
-                              <p className={`font-mono text-xs font-bold mb-1 ${
-                                isDark ? 'text-slate-400' : 'text-slate-600'
-                              }`}>NO_CERTIFICATE_DATA_FOUND</p>
-                              <p className={`text-xs max-w-xs ${
-                                isDark ? 'text-slate-500' : 'text-slate-500'
-                              }`}>
-                                Credential image file pending upload to portfolio vault.
+                              <p className={`font-mono text-[10px] max-w-xs ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+                                Credential file not yet uploaded to vault.
+                                <br />Add your certificate image to <code className="text-[#00f0ff]/70">/public/certificates/</code>
                               </p>
                             </div>
                           )}
