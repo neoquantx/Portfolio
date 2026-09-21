@@ -412,7 +412,7 @@ export default function ContactTerminal() {
       
       {/* Terminal Window with CRT Scanline & Text Glow */}
       <div 
-        className="font-mono text-xs md:text-sm p-5 min-h-[350px] max-h-[350px] overflow-y-auto cursor-text bg-slate-50/95 dark:bg-[#030305] custom-scrollbar relative"
+        className="font-mono text-xs md:text-sm p-5 min-h-[250px] sm:min-h-[350px] max-h-[250px] sm:max-h-[350px] overflow-y-auto cursor-text bg-slate-50/95 dark:bg-[#030305] custom-scrollbar relative"
         onClick={() => {
           terminalSound.init();
           inputRef.current?.focus();
