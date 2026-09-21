@@ -1,13 +1,13 @@
 export const portfolioData = {
   personal: {
     name: 'Himanshu Nikam',
-    title: 'Software Engineer',
-    tagline: 'Building the future, one line of code at a time',
-    bio: 'A passionate Computer Science Engineering student driven by innovation and a love for building impactful software solutions. From full-stack web applications to algorithm visualizers, I thrive on turning complex ideas into elegant digital experiences.',
+    title: 'Software Engineer', // TODO: Update to your exact role/tagline e.g. "Full Stack Engineer & ML Enthusiast"
+    tagline: 'I build systems that think, scale, and ship.',
+    bio: 'CSE undergrad at CMRIT Bengaluru who writes GLSL shaders before breakfast and ships full-stack products by evening. I turn complex ideas into interactive digital experiences — from OS simulators to AI-powered tools. Currently hunting for my first industry role where I can architect something worth using.',
     email: 'himanshunikam1817@gmail.com',
     phone: '+91 8737923714',
     location: 'Bengaluru, Karnataka',
-    resumeUrl: '/resume.pdf'
+    resumeUrl: '/resume.pdf' // TODO: Add your actual resume PDF to /public/resume.pdf
   },
   socials: [
     { name: 'GitHub', url: 'https://github.com/neoquantx', icon: 'Github' },
@@ -22,8 +22,8 @@ export const portfolioData = {
       description: 'A full-stack assignment management platform enabling students to submit assignments and teachers to evaluate them. Features JWT-based auth with role-based access, file uploads for PDF/DOCX submissions, and RESTful API design.',
       techStack: ['React.js', 'Node.js', 'Express.js', 'MongoDB', 'JWT Auth', 'Tailwind CSS'],
       formula: 'Re·Nd·Ex·Mg·JWT·TW',
-      github: 'https://github.com/neoquantx',
-      live: null,
+      github: 'https://github.com/neoquantx', // TODO: Replace with actual repo URL e.g. 'https://github.com/neoquantx/smart-assignment-system'
+      live: null, // TODO: Add live URL once deployed e.g. 'https://smart-assign.vercel.app'
       category: 'fullstack'
     },
     {
@@ -32,8 +32,8 @@ export const portfolioData = {
       description: 'An interactive web-based simulator demonstrating deadlock avoidance in operating systems. Features dynamic matrix generation for Allocation, Max, Need, and Total Resources with real-time input validation and visual safe/unsafe status indicators.',
       techStack: ['HTML5', 'CSS3', 'JavaScript', 'DOM Manipulation', 'Algorithm Viz'],
       formula: 'H5·C3·JS·DOM·Algo',
-      github: 'https://github.com/neoquantx',
-      live: null,
+      github: 'https://github.com/neoquantx', // TODO: Replace with actual repo URL
+      live: null, // TODO: Add live URL once deployed
       category: 'frontend'
     },
     {
@@ -42,8 +42,8 @@ export const portfolioData = {
       description: 'A comprehensive web application for education consultancy to streamline student admissions, information management, and service delivery. Built with Firebase for scalable real-time database operations, authentication, and lead management.',
       techStack: ['HTML5', 'CSS3', 'JavaScript', 'Firebase', 'Authentication'],
       formula: 'H5·C3·JS·🔥·Auth',
-      github: 'https://github.com/neoquantx',
-      live: null,
+      github: 'https://github.com/neoquantx', // TODO: Replace with actual repo URL
+      live: null, // TODO: Add live URL once deployed
       category: 'fullstack'
     }
   ],
@@ -113,7 +113,7 @@ export const portfolioData = {
       role: 'Participant',
       description: 'National level hackathon organized by MoE. Built innovative solutions for real-world problem statements under time constraints.',
       tags: ['Problem Solving', 'Teamwork', 'Innovation'],
-      certificate_url: null, // TODO: Add your certificate image path here (e.g., '/certificates/sih-2024.jpg')
+      certificate_url: null, // TODO: Add certificate image path e.g. '/certificates/sih-2024.jpg'
       date: '2024'
     },
     {
@@ -122,7 +122,7 @@ export const portfolioData = {
       role: 'Participant',
       description: 'Intense technical hackathon focused on modern web and cloud technologies. Prototyped full-stack applications.',
       tags: ['Web Dev', 'Rapid Prototyping'],
-      certificate_url: null, // TODO: Add your certificate image path here
+      certificate_url: null, // TODO: Add certificate image path
       date: '2025'
     },
     {
@@ -131,7 +131,7 @@ export const portfolioData = {
       role: 'Participant',
       description: 'Continuing the journey of solving complex national challenges through scalable system design and architecture.',
       tags: ['Full Stack', 'System Design'],
-      certificate_url: null, // TODO: Add your certificate image path here
+      certificate_url: null, // TODO: Add certificate image path
       date: '2025'
     },
     {
@@ -140,7 +140,7 @@ export const portfolioData = {
       role: 'Competitor',
       description: 'College-level competitive programming hackathon focusing on Data Structures and Algorithms optimization.',
       tags: ['Algorithms', 'Data Structures', 'Logic'],
-      certificate_url: null, // TODO: Add your certificate image path here
+      certificate_url: null, // TODO: Add certificate image path
       date: '2025'
     },
     {
@@ -149,7 +149,7 @@ export const portfolioData = {
       role: 'Participant',
       description: 'Advanced machine learning hackathon building AI environments and models utilizing the PyTorch ecosystem.',
       tags: ['PyTorch', 'Machine Learning', 'AI'],
-      certificate_url: null, // TODO: Add your certificate image path here
+      certificate_url: null, // TODO: Add certificate image path
       date: '2026'
     }
   ]
