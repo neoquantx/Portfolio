@@ -8,12 +8,11 @@ export default function PostProcessing({
   aberrationOffset = 0.0008 
 }) {
   return (
-    <EffectComposer disableNormalPass multisampling={4}>
+    <EffectComposer disableNormalPass multisampling={0}>
       <Bloom 
         luminanceThreshold={0.4}
         luminanceSmoothing={0.9}
         intensity={bloomIntensity}
-        mipmapBlur
       />
       <ChromaticAberration
         blendFunction={BlendFunction.NORMAL}
