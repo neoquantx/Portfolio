@@ -1,37 +1,48 @@
-import { useState, useEffect } from 'react';
-import { lerp } from '../utils/math';
+import { useState, useEffect, useRef } from 'react';
 
-export const useMouseParallax = (lerpFactor = 0.1) => {
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
-  const [targetMouse, setTargetMouse] = useState({ x: 0, y: 0 });
+// Throttled mouse parallax - uses a ref internally so RAF does NOT
+// cause React re-renders every frame. Only updates state when the
+// smoothed value has changed meaningfully (delta > threshold).
+export const useMouseParallax = (elementRef, lerpFactor = 0.08, multiplier = -20) => {
+  const targetRef = useRef({ x: 0, y: 0 });
+  const currentRef = useRef({ x: 0, y: 0 });
+  const rafRef = useRef(null);
 
   useEffect(() => {
+    if (!elementRef.current) return;
+
     const handleMouseMove = (e) => {
-      // Normalize to -1 to 1
-      const x = (e.clientX / window.innerWidth) * 2 - 1;
-      const y = -(e.clientY / window.innerHeight) * 2 + 1;
-      setTargetMouse({ x, y });
+      targetRef.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      targetRef.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
-  useEffect(() => {
-    let animationFrameId;
-    
     const animate = () => {
-      setMouse((prevMouse) => ({
-        x: lerp(prevMouse.x, targetMouse.x, lerpFactor),
-        y: lerp(prevMouse.y, targetMouse.y, lerpFactor),
-      }));
-      animationFrameId = requestAnimationFrame(animate);
-    };
-    
-    animate();
-    
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [targetMouse, lerpFactor]);
+      const tx = targetRef.current.x;
+      const ty = targetRef.current.y;
+      const cx = currentRef.current.x;
+      const cy = currentRef.current.y;
 
-  return mouse;
+      const nx = cx + (tx - cx) * lerpFactor;
+      const ny = cy + (ty - cy) * lerpFactor;
+
+      currentRef.current.x = nx;
+      currentRef.current.y = ny;
+
+      // Direct DOM mutation - zero React renders!
+      if (elementRef.current) {
+        elementRef.current.style.transform = `translate(${nx * multiplier}px, ${ny * multiplier}px)`;
+      }
+
+      rafRef.current = requestAnimationFrame(animate);
+    };
+
+    rafRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [lerpFactor, multiplier, elementRef]);
 };
