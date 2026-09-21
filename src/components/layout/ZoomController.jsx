@@ -7,8 +7,11 @@ import ContactTerminal from '../ui/ContactTerminal';
 import ProjectSimulatorModal from '../ui/ProjectSimulatorModal';
 import TrophyVaultModal from '../ui/TrophyVaultModal';
 import { terminalSound } from '../../utils/terminalSound';
+import { useScrollProgress } from '../../hooks/useScrollProgress';
+import ScrollPrompt from '../ui/ScrollPrompt';
 
-export default function ZoomController({ scrollProgress, portfolioData, isOverclocked, setIsOverclocked }) {
+export default function ZoomController({ portfolioData, isOverclocked, setIsOverclocked }) {
+  const scrollProgress = useScrollProgress();
   const [selectedSimulatorProject, setSelectedSimulatorProject] = useState(null);
   const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [selectedSkillCategory, setSelectedSkillCategory] = useState('ALL');
@@ -41,36 +44,46 @@ export default function ZoomController({ scrollProgress, portfolioData, isOvercl
   const level = getZoomLevel(scrollProgress);
 
   const slideVariants = {
-    initial: { opacity: 0, scale: 0.96, filter: 'blur(6px)' },
-    animate: { opacity: 1, scale: 1, filter: 'blur(0px)', transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
-    exit: { opacity: 0, scale: 1.04, filter: 'blur(6px)', transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } }
+    initial: { opacity: 0, y: 16, scale: 0.98 },
+    animate: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1, 
+      transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] } 
+    },
+    exit: { 
+      opacity: 0, 
+      y: -14, 
+      scale: 1.01, 
+      transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } 
+    }
   };
 
   return (
     <div className={`w-full h-full p-6 md:p-12 lg:p-24 flex items-center justify-center pointer-events-none ${isOverclocked ? 'animate-glitch' : ''}`}>
       
-      {/* HUD Navigation Indicator */}
-      <div className="absolute top-12 left-12 flex flex-col gap-2 pointer-events-none">
+      {/* HUD Navigation Indicator — hidden on small screens */}
+      <div className="hidden sm:flex absolute top-8 sm:top-12 left-4 sm:left-12 flex-col gap-2 pointer-events-none">
         {[1, 2, 3, 4, 5].map((l) => (
           <div key={l} className="flex items-center gap-3">
-            <div className={`w-1 h-8 transition-colors duration-500 ${level === l ? (isOverclocked ? 'bg-[#ff0055] shadow-[0_0_10px_#ff0055]' : 'bg-nano-cyan shadow-[0_0_10px_#00f0ff]') : 'bg-white/10'}`} />
-            <span className={`text-[10px] tracking-[0.2em] font-mono transition-opacity duration-500 ${level === l ? (isOverclocked ? 'text-[#ff0055] opacity-100 font-bold' : 'text-nano-cyan opacity-100') : 'text-white/30 opacity-0'}`}>
+            <div className={`w-1 h-6 sm:h-8 transition-colors duration-500 ${level === l ? (isOverclocked ? 'bg-[#ff0055] shadow-[0_0_10px_#ff0055]' : 'bg-nano-cyan shadow-[0_0_10px_#00f0ff]') : 'bg-white/10'}`} />
+            <span className={`text-[9px] sm:text-[10px] tracking-[0.2em] font-mono transition-opacity duration-500 ${level === l ? (isOverclocked ? 'text-[#ff0055] opacity-100 font-bold' : 'text-nano-cyan opacity-100') : 'text-white/30 opacity-0'}`}>
               {isOverclocked ? `OVR_${l}` : `Lvl 0${l}`}
             </span>
           </div>
         ))}
       </div>
 
-      {/* OVERCLOCK BUTTON */}
-      <div className="absolute bottom-12 left-12 pointer-events-auto">
+      {/* OVERCLOCK BUTTON — mobile: bottom-20 to clear terminal button */}
+      <div className="absolute bottom-20 sm:bottom-12 left-4 sm:left-12 pointer-events-auto">
         <button
           onClick={() => {
             terminalSound.playBootBleep(3);
             setIsOverclocked(!isOverclocked);
           }}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[10px] font-mono font-bold tracking-widest uppercase transition-all duration-300 ${
-            isOverclocked 
-              ? 'bg-rose-500/20 text-rose-500 border border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.4)]' 
+            isOverclocked
+              ? 'bg-rose-500/20 text-rose-500 border border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.4)]'
               : 'bg-slate-200/90 dark:bg-slate-900/80 text-slate-800 dark:text-slate-200 border border-slate-400/60 dark:border-slate-700/60 hover:border-rose-500 dark:hover:border-rose-500 hover:text-rose-600 dark:hover:text-rose-400 shadow-md'
           }`}
           data-hoverable="true"
@@ -80,18 +93,22 @@ export default function ZoomController({ scrollProgress, portfolioData, isOvercl
         </button>
       </div>
 
-      <AnimatePresence mode="popLayout">
+      <AnimatePresence mode="wait">
         {/* LEVEL 1: SURFACE */}
         {level === 1 && (
           <motion.div key="l1" {...slideVariants} className="w-full max-w-7xl mx-auto flex flex-col items-center justify-center pointer-events-auto">
-            <ModuleContainer className="text-center px-16 py-12">
-              <h1 className="text-6xl md:text-8xl font-space font-bold tracking-tighter mb-4 text-glow text-text-primary">
+            <ModuleContainer className="text-center px-6 sm:px-10 md:px-16 py-8 sm:py-12">
+              <h1 className="text-4xl sm:text-6xl md:text-8xl font-space font-bold tracking-tighter mb-4 text-glow text-text-primary break-words">
                 {portfolioData.personal.name}
               </h1>
-              <p className="font-mono tracking-[0.3em] text-nano-cyan uppercase text-sm md:text-base">
+              <p className="font-mono tracking-[0.2em] sm:tracking-[0.3em] text-nano-cyan uppercase text-xs sm:text-sm md:text-base">
                 {portfolioData.personal.title}
               </p>
+              <p className="mt-4 text-text-secondary text-xs sm:text-sm font-space max-w-md mx-auto leading-relaxed">
+                {portfolioData.personal.tagline}
+              </p>
             </ModuleContainer>
+            <ScrollPrompt />
           </motion.div>
         )}
 
@@ -351,7 +368,7 @@ export default function ZoomController({ scrollProgress, portfolioData, isOvercl
                           </div>
 
                           {/* Skills Grid */}
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
                             {catSkills.map((skill, si) => {
                               const isSelected = selectedActiveSkill?.name === skill.name;
                               const linkedProjects = getLinkedProjects(skill.name);
