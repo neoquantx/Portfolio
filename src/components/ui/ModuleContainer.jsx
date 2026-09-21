@@ -8,11 +8,7 @@ export default function ModuleContainer({
   ...props 
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
+    <div
       className={`relative module-glass p-8 md:p-12 overflow-hidden group ${className}`}
       {...props}
     >
@@ -28,6 +24,6 @@ export default function ModuleContainer({
       <div className="relative z-10 pointer-events-auto">
         {children}
       </div>
-    </motion.div>
+    </div>
   );
 }
