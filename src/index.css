@@ -119,7 +119,7 @@ body {
 .grid-bg {
   width: 100%;
   height: 100%;
-  transition: transform 0.1s ease-out;
+  will-change: transform;
   /* Light mode hexagon SVG data URI */
   background-image: url("data:image/svg+xml,%3Csvg width='60' height='103.923' viewBox='0 0 60 103.923' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 103.923L0 86.6025V51.9615L30 34.641L60 51.9615V86.6025L30 103.923ZM30 101.614L58 85.447V53.116L30 36.949L2 53.116V85.447L30 101.614ZM30 51.9615L0 34.641V0L30 -17.3205L60 0V34.641L30 51.9615ZM30 49.652L58 33.485V1.155L30 -15.012L2 1.155V33.485L30 49.652Z' fill='rgba(14,165,233,0.1)'/%3E%3C/svg%3E");
   background-size: 60px 103.923px;
@@ -163,14 +163,15 @@ body {
   100% { transform: translateY(100%); }
 }
 
-/* Premium Module Glass */
+/* Premium Module Glass - optimized for 120fps hardware acceleration */
 .module-glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(24px) saturate(150%);
-  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  will-change: transform, opacity;
 }
 
 .module-glass:hover {
