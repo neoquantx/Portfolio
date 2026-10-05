@@ -74,24 +74,6 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
         ))}
       </div>
 
-      {/* OVERCLOCK BUTTON — mobile: bottom-20 to clear terminal button */}
-      <div className="absolute bottom-20 sm:bottom-12 left-4 sm:left-12 pointer-events-auto">
-        <button
-          onClick={() => {
-            terminalSound.playBootBleep(3);
-            setIsOverclocked(!isOverclocked);
-          }}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[10px] font-mono font-bold tracking-widest uppercase transition-all duration-300 ${
-            isOverclocked
-              ? 'bg-rose-500/20 text-rose-500 border border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.4)]'
-              : 'bg-slate-200/90 dark:bg-slate-900/80 text-slate-800 dark:text-slate-200 border border-slate-400/60 dark:border-slate-700/60 hover:border-rose-500 dark:hover:border-rose-500 hover:text-rose-600 dark:hover:text-rose-400 shadow-md'
-          }`}
-          data-hoverable="true"
-        >
-          <span className={`w-2 h-2 rounded-full ${isOverclocked ? 'bg-rose-500 animate-ping' : 'bg-slate-500 dark:bg-slate-400'}`} />
-          {isOverclocked ? 'OVERRIDE_ACTIVE' : 'OVERRIDE_SYSTEM'}
-        </button>
-      </div>
 
       <AnimatePresence mode="wait">
         {/* LEVEL 1: SURFACE */}
