@@ -4,7 +4,7 @@ import Cursor from './components/ui/Cursor';
 import SoundToggle from './components/ui/SoundToggle';
 import ThemeToggle from './components/ui/ThemeToggle';
 import ZoomController from './components/layout/ZoomController';
-import NanoScene from './components/canvas/NanoScene';
+const NanoScene = React.lazy(() => import('./components/canvas/NanoScene'));
 import TerminalEasterEgg from './components/ui/TerminalEasterEgg';
 import { useMouseParallax } from './hooks/useMouseParallax';
 import { portfolioData } from './config/portfolio';
@@ -13,7 +13,14 @@ import { terminalSound } from './utils/terminalSound';
 // Isolated component so mouse moves don't re-render the whole App
 function GridBackground() {
   const bgRef = React.useRef(null);
-  useMouseParallax(bgRef, 0.08, -20);
+  const isTouch = React.useMemo(() => {
+    try { return window.matchMedia?.('(pointer: coarse)').matches; } catch { return false; }
+  }, []);
+  const prefersReduced = React.useMemo(() => {
+    try { return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches; } catch { return false; }
+  }, []);
+  // Disable parallax on touch/reduced-motion: it causes iOS jank + battery drain
+  useMouseParallax(bgRef, 0.08, -20, { disabled: isTouch || prefersReduced });
   return (
     <div className="grid-bg-container">
       <div
@@ -58,8 +65,9 @@ export default function App() {
       {/* Loader — z-index 9999, on top of everything */}
       {isLoading && <Loader onComplete={() => setIsLoading(false)} />}
 
-      {/* Main app — always in DOM but hidden behind loader */}
-      <div style={{ height: '500vh' }}>
+      {/* Main app — always in DOM but hidden behind loader. Responsive scroll distance:
+          500vh desktop, 420vh mobile to reduce endless scroll feeling */}
+      <div className="app-scroll" style={{ height: 'var(--app-scroll-h, 500vh)' }}>
         <div className={isOverclocked ? 'animate-pulse-fast' : ''}>
 
           {/* UI elements — only show after load to prevent click-through */}
@@ -79,7 +87,9 @@ export default function App() {
 
           {/* 3D Canvas — z-index 1 */}
           <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 1 }}>
-            <NanoScene isOverclocked={isOverclocked} />
+            <React.Suspense fallback={null}>
+              <NanoScene isOverclocked={isOverclocked} />
+            </React.Suspense>
           </div>
 
           {/* HTML UI overlay — z-index 10 */}
