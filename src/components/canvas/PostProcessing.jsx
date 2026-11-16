@@ -2,11 +2,23 @@ import { EffectComposer, Bloom, ChromaticAberration, Vignette, Noise } from '@re
 import { BlendFunction } from 'postprocessing'
 import * as THREE from 'three'
 
+// Low tier: Vignette only (no Bloom/CA) — keeps 60fps on phones with 8500+ particles
+// High tier: full Bloom + ChromaticAberration + Vignette as before
 export default function PostProcessing({ 
   enableNoise = true, 
   bloomIntensity = 0.4, 
-  aberrationOffset = 0.0008 
+  aberrationOffset = 0.0008,
+  quality = 'high'
 }) {
+  if (quality === 'low') {
+    return (
+      <EffectComposer disableNormalPass multisampling={0} frameBufferType={THREE.HalfFloatType}>
+        <Vignette eskil={false} offset={0.1} darkness={0.7} />
+      </EffectComposer>
+    )
+  }
+  // Cache aberration offset vector to avoid new allocation per render
+  const aberrationVec = new THREE.Vector2(aberrationOffset, aberrationOffset)
   return (
     <EffectComposer disableNormalPass multisampling={0}>
       <Bloom 
@@ -16,7 +28,7 @@ export default function PostProcessing({
       />
       <ChromaticAberration
         blendFunction={BlendFunction.NORMAL}
-        offset={new THREE.Vector2(aberrationOffset, aberrationOffset)}
+        offset={aberrationVec}
       />
       <Vignette
         eskil={false}
