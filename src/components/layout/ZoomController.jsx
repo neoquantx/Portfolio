@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Mail, Github } from 'lucide-react';
 import ModuleContainer from '../ui/ModuleContainer';
 import ProjectSlide from '../ui/ProjectSlide';
 import ContactTerminal from '../ui/ContactTerminal';
-import ProjectSimulatorModal from '../ui/ProjectSimulatorModal';
-import TrophyVaultModal from '../ui/TrophyVaultModal';
+const ProjectSimulatorModal = React.lazy(() => import('../ui/ProjectSimulatorModal'));
+const TrophyVaultModal = React.lazy(() => import('../ui/TrophyVaultModal'));
 import { terminalSound } from '../../utils/terminalSound';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
 import ScrollPrompt from '../ui/ScrollPrompt';
@@ -60,7 +60,7 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
   };
 
   return (
-    <div className={`w-full h-full p-6 md:p-12 lg:p-24 flex items-center justify-center pointer-events-none ${isOverclocked ? 'animate-glitch' : ''}`}>
+    <div className={`w-full h-full p-3 sm:p-6 md:p-12 lg:p-24 flex items-start md:items-center justify-center pointer-events-none overflow-y-auto custom-scrollbar ${isOverclocked ? 'animate-glitch' : ''}`}>
       
       {/* HUD Navigation Indicator — hidden on small screens */}
       <div className="hidden sm:flex absolute top-8 sm:top-12 left-4 sm:left-12 flex-col gap-2 pointer-events-none">
@@ -78,9 +78,9 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
       <AnimatePresence mode="wait">
         {/* LEVEL 1: SURFACE */}
         {level === 1 && (
-          <motion.div key="l1" {...slideVariants} className="w-full max-w-7xl mx-auto flex flex-col items-center justify-center pointer-events-auto">
-            <ModuleContainer className="text-center px-6 sm:px-10 md:px-16 py-8 sm:py-12">
-              <h1 className="text-4xl sm:text-6xl md:text-8xl font-space font-bold tracking-tighter mb-4 text-glow text-text-primary break-words">
+          <motion.div key="l1" {...slideVariants} className="w-full max-w-7xl mx-auto flex flex-col items-center justify-center pointer-events-auto max-h-full overflow-y-auto py-2">
+            <ModuleContainer className="text-center px-4 sm:px-10 md:px-16 py-6 sm:py-10 md:py-12">
+              <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-space font-bold tracking-tighter mb-3 sm:mb-4 text-glow text-text-primary break-words leading-none">
                 {portfolioData.personal.name}
               </h1>
               <p className="font-mono tracking-[0.2em] sm:tracking-[0.3em] text-nano-cyan uppercase text-xs sm:text-sm md:text-base">
@@ -89,6 +89,25 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
               <p className="mt-4 text-text-secondary text-xs sm:text-sm font-space max-w-md mx-auto leading-relaxed">
                 {portfolioData.personal.tagline}
               </p>
+              <div className="mt-5 sm:mt-6 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
+                <a
+                  href={`mailto:${portfolioData.personal.email}`}
+                  className="inline-flex items-center gap-2 min-h-[44px] px-4 sm:px-5 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-700 dark:bg-nano-cyan dark:hover:bg-cyan-300 text-white dark:text-slate-950 font-mono text-xs sm:text-sm font-bold tracking-wider transition-colors"
+                  data-hoverable="true"
+                >
+                  <Mail className="w-4 h-4" /> Email Me
+                </a>
+                <a
+                  href={portfolioData.socials.find((s) => s.name === 'GitHub')?.url || 'https://github.com/neoquantx'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 min-h-[44px] px-4 sm:px-5 py-2.5 rounded-lg border border-sky-500 dark:border-nano-cyan/50 text-sky-700 dark:text-nano-cyan hover:bg-sky-50 dark:hover:bg-nano-cyan/10 font-mono text-xs sm:text-sm font-bold tracking-wider transition-colors"
+                  data-hoverable="true"
+                >
+                  <Github className="w-4 h-4" /> GitHub
+                </a>
+              </div>
+              <p className="mt-3 text-[11px] font-mono text-text-secondary break-all">{portfolioData.personal.email}</p>
             </ModuleContainer>
             <ScrollPrompt />
           </motion.div>
@@ -96,12 +115,12 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
 
         {/* LEVEL 2: LATTICE / BIO */}
         {level === 2 && (
-          <motion.div key="l2" {...slideVariants} className="w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 pointer-events-auto">
-            <div className="md:col-span-6 md:col-start-7 lg:col-span-5 lg:col-start-8 flex flex-col justify-center">
+          <motion.div key="l2" {...slideVariants} className="w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 pointer-events-auto max-h-full overflow-y-auto py-2">
+            <div className="md:col-span-6 md:col-start-7 lg:col-span-5 lg:col-start-8 flex flex-col justify-center min-h-0">
               <ModuleContainer delay={0.2}>
-                <h2 className="text-sm font-mono text-sky-600 dark:text-nano-cyan tracking-widest mb-4 font-bold">[ IDENTITY_MATRIX ]</h2>
-                <h3 className="text-3xl font-space font-bold mb-6 text-text-primary">Systems Online.</h3>
-                <p className="text-text-secondary leading-relaxed font-space mb-8">
+                <h2 className="text-xs sm:text-sm font-mono text-sky-600 dark:text-nano-cyan tracking-widest mb-3 sm:mb-4 font-bold">[ IDENTITY_MATRIX ]</h2>
+                <h3 className="text-2xl sm:text-3xl font-space font-bold mb-4 sm:mb-6 text-text-primary">Systems Online.</h3>
+                <p className="text-text-secondary leading-relaxed font-space mb-5 sm:mb-8 text-sm sm:text-base">
                   {portfolioData.personal.bio}
                 </p>
                 
@@ -119,6 +138,21 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
                   </span>
                   <span className="group-hover:translate-x-2 transition-transform">&rarr;</span>
                 </button>
+
+                {/* Journey — visible timeline (data: portfolioData.timeline, newest first) */}
+                <div className="mt-6 pt-5 border-t border-slate-200 dark:border-white/10 text-left">
+                  <h4 className="text-xs font-mono font-bold tracking-widest text-sky-600 dark:text-nano-cyan mb-3">[ JOURNEY ]</h4>
+                  <ol className="relative border-l border-slate-300 dark:border-slate-700 ml-1.5 max-h-[38dvh] md:max-h-[42dvh] overflow-y-auto pr-2 custom-scrollbar">
+                    {portfolioData.timeline.map((item, i) => (
+                      <li key={i} className="ml-4 pb-3.5 last:pb-1">
+                        <span className="absolute -left-[5px] mt-1 w-2.5 h-2.5 rounded-full bg-sky-500 dark:bg-nano-cyan shadow-[0_0_6px_var(--accent-primary)]" />
+                        <span className="text-[10px] font-mono font-bold text-sky-600 dark:text-nano-cyan">{item.year}</span>
+                        <p className="text-sm font-space font-bold text-text-primary leading-snug">{item.event}</p>
+                        <p className="text-xs text-text-secondary leading-relaxed">{item.description}</p>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
               </ModuleContainer>
             </div>
           </motion.div>
@@ -126,14 +160,14 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
 
         {/* LEVEL 3: LAB / PROJECTS */}
         {level === 3 && (
-          <motion.div key="l3" {...slideVariants} className="w-full max-w-7xl mx-auto flex flex-col items-center pointer-events-auto h-full max-h-[calc(100vh-6rem)]">
+          <motion.div key="l3" {...slideVariants} className="w-full max-w-7xl mx-auto flex flex-col items-center pointer-events-auto w-full min-h-0 max-h-[calc(100dvh-1.5rem)] md:max-h-[calc(100dvh-6rem)]">
             <ModuleContainer className="w-full mb-6 text-center !p-4 md:!p-6">
               <h2 className="text-sm font-mono text-sky-600 dark:text-nano-purple tracking-widest mb-2 font-bold">[ ARCHIVE_DATA ]</h2>
               <h3 className="text-2xl md:text-3xl font-space font-bold mb-2 text-text-primary">Deployments</h3>
               <p className="text-text-secondary font-mono text-xs md:text-sm">Accessing mission-critical project modules · Click simulator to test live</p>
             </ModuleContainer>
 
-            <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 overflow-y-auto custom-scrollbar pb-10 px-1">
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 overflow-y-auto custom-scrollbar pb-6 px-1 min-h-0 max-h-[52dvh] md:max-h-[58dvh]">
               {portfolioData.projects.map((proj, idx) => {
                 const simulatorLabel = 
                   proj.id === 2 ? '⚡ RUN LIVE OS SIMULATOR' :
@@ -212,18 +246,20 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
               })}
             </div>
 
-            {/* Interactive Project Simulator Modal */}
+            {/* Interactive Project Simulator Modal (lazy) */}
+            <React.Suspense fallback={null}>
             <ProjectSimulatorModal
               project={selectedSimulatorProject}
               isOpen={!!selectedSimulatorProject}
               onClose={() => setSelectedSimulatorProject(null)}
             />
+            </React.Suspense>
           </motion.div>
         )}
 
         {/* LEVEL 4: DNA / SKILLS (INTERACTIVE SKILL REACTOR) */}
         {level === 4 && (
-          <motion.div key="l4" {...slideVariants} className="w-full max-w-7xl mx-auto flex items-start justify-center pointer-events-auto max-h-[calc(100vh-3rem)] md:max-h-[calc(100vh-6rem)] lg:max-h-[calc(100vh-12rem)]">
+          <motion.div key="l4" {...slideVariants} className="w-full max-w-7xl mx-auto flex items-start justify-center pointer-events-auto w-full min-h-0 max-h-[calc(100dvh-1.5rem)] md:max-h-[calc(100dvh-6rem)] lg:max-h-[calc(100dvh-8rem)]">
             <div className="flex flex-col items-center justify-start text-center w-full">
               <ModuleContainer className="max-w-5xl w-full !p-4 md:!p-6 lg:!p-8">
                 {/* Header */}
@@ -268,7 +304,7 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-sky-700 dark:text-nano-cyan font-bold">⚡ NODE:</span>
-                      <span className="px-2 py-0.5 rounded bg-sky-600 text-white dark:bg-nano-cyan/20 dark:text-white font-bold">{selectedActiveSkill.name} ({selectedActiveSkill.level}%)</span>
+                      <span className="px-2 py-0.5 rounded bg-sky-600 text-white dark:bg-nano-cyan/20 dark:text-white font-bold">{selectedActiveSkill.name}</span>
                       <span className="text-slate-600 dark:text-slate-400 text-[11px]">➔ LINKED PROJECTS:</span>
                     </div>
 
@@ -298,7 +334,7 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
                 )}
 
                 {/* Scrollable Category Groups */}
-                <div className="space-y-3 md:space-y-4 text-left max-h-[46vh] md:max-h-[50vh] overflow-y-auto pr-1 custom-scrollbar">
+                <div className="space-y-3 md:space-y-4 text-left max-h-[36dvh] sm:max-h-[40dvh] md:max-h-[46dvh] lg:max-h-[50dvh] overflow-y-auto pr-1 custom-scrollbar">
                   {(() => {
                     const allCategories = ['Frontend', 'Backend', 'ML & AI', 'Mobile', 'Cloud & DB', 'DevOps', 'Core'];
                     const categories = selectedSkillCategory === 'ALL' 
@@ -392,21 +428,7 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
                                     )}
                                   </div>
                                   
-                                  <div className="flex items-center gap-1.5 md:gap-2 mt-1.5 relative z-10">
-                                    <div className="flex-1 h-1 md:h-1.5 bg-slate-300 dark:bg-black/40 rounded-full overflow-hidden relative">
-                                      <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${skill.level}%` }}
-                                        transition={{ duration: 0.8, delay: 0.1 + (si * 0.03), ease: "easeOut" }}
-                                        className={`h-full rounded-full ${
-                                          skill.level >= 80 ? 'bg-sky-600 dark:bg-nano-cyan shadow-[0_0_8px_var(--color-nano-cyan)]' :
-                                          skill.level >= 60 ? 'bg-indigo-600 dark:bg-nano-purple shadow-[0_0_8px_var(--color-nano-purple)]' :
-                                          'bg-orange-500 dark:bg-nano-orange shadow-[0_0_8px_var(--color-nano-orange)]'
-                                        }`}
-                                      />
-                                    </div>
-                                    <span className="text-[9px] md:text-[10px] font-mono font-bold text-slate-700 dark:text-text-secondary">{skill.level}%</span>
-                                  </div>
+                                  {/* % bars removed per owner choice — name + deploy link only */}
                                 </motion.div>
                               );
                             })}
@@ -423,16 +445,18 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
 
         {/* LEVEL 5: CORE / CONTACT */}
         {level === 5 && (
-          <motion.div key="l5" {...slideVariants} className="w-full max-w-7xl mx-auto flex flex-col items-center justify-center pointer-events-auto">
+          <motion.div key="l5" {...slideVariants} className="w-full max-w-7xl mx-auto flex flex-col items-center justify-center pointer-events-auto max-h-full overflow-y-auto py-2">
             <ContactTerminal data={portfolioData.socials} />
           </motion.div>
         )}
       </AnimatePresence>
 
+      <React.Suspense fallback={null}>
       <TrophyVaultModal 
         isOpen={isVaultOpen} 
         onClose={() => setIsVaultOpen(false)} 
       />
+      </React.Suspense>
     </div>
   );
 }
