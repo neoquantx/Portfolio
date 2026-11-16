@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 const ScrollPrompt = () => {
   return (
     <motion.div 
-      className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-70 z-10"
+      className="absolute bottom-2 sm:bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-70 z-10 scale-90 sm:scale-100"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 3, duration: 2, ease: [0.16, 1, 0.3, 1] }}
