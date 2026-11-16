@@ -160,7 +160,7 @@ export default function ProjectSimulatorModal({ project, isOpen, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-10 bg-black/75 backdrop-blur-xl pointer-events-auto select-none"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 md:p-10 bg-black/75 backdrop-blur-xl pointer-events-auto select-none"
       onClick={onClose}
     >
       <motion.div
@@ -168,7 +168,7 @@ export default function ProjectSimulatorModal({ project, isOpen, onClose }) {
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.94, opacity: 0, y: 25 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full max-w-5xl max-h-[92vh] flex flex-col module-glass !p-0 rounded-2xl border border-nano-cyan/40 shadow-[0_0_50px_rgba(0,240,255,0.2)] overflow-hidden bg-slate-950/95 text-slate-100"
+        className="relative w-full max-w-5xl max-h-[92dvh] flex flex-col module-glass !p-0 rounded-2xl border border-nano-cyan/40 shadow-[0_0_50px_rgba(0,240,255,0.2)] overflow-hidden bg-slate-950/95 text-slate-100"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header Bar */}
