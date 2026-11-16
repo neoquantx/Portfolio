@@ -40,8 +40,7 @@ const COMMANDS = {
         return [
           { text: `\n  ▸ ${cat.toUpperCase()}`, cls: 'text-[#00f0ff]/80 font-bold' },
           ...sk.map(s => {
-            const bars = Math.round(s.level / 10);
-            return { text: `    ${s.name.padEnd(16)} ${'█'.repeat(bars)}${'░'.repeat(10-bars)} ${s.level}%`, cls: s.level >= 80 ? 'text-[#00f0ff]' : 'text-slate-400' };
+            return { text: `    ${s.name}`, cls: s.level >= 80 ? 'text-[#00f0ff]' : 'text-slate-400' };
           }),
         ];
       }),
