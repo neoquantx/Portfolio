@@ -3,10 +3,22 @@ import { motion, useSpring } from 'framer-motion';
 
 const Cursor = () => {
   const [isHovering, setIsHovering] = useState(false);
+  const [enabled, setEnabled] = useState(false);
   const cursorX = useSpring(-100, { stiffness: 500, damping: 28 });
   const cursorY = useSpring(-100, { stiffness: 500, damping: 28 });
-  
+
   useEffect(() => {
+    try {
+      const coarse = window.matchMedia?.('(pointer: coarse)').matches;
+      const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      const isTouchOnly = coarse || 'ontouchstart' in window && !window.matchMedia?.('(pointer: fine)').matches;
+      if (coarse || reduced) return; // keep enabled=false
+      setEnabled(true);
+    } catch { setEnabled(true); }
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
     const moveCursor = (e) => {
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
@@ -34,8 +46,9 @@ const Cursor = () => {
       window.removeEventListener('mousemove', moveCursor);
       window.removeEventListener('mouseover', handleMouseOver);
     };
-  }, [cursorX, cursorY]);
+  }, [cursorX, cursorY, enabled]);
 
+  if (!enabled) return null;
   return (
     <div className="pointer-events-none fixed inset-0 z-50 mix-blend-difference hidden md:block">
       {/* Outer Ring */}
