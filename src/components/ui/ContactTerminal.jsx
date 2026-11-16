@@ -196,11 +196,9 @@ export default function ContactTerminal() {
             const catSkills = portfolioData.skills.filter(s => s.category === cat);
             lines.push({ type: 'system', text: `\n  ${catIcons[cat] || '▸'} ${cat.toUpperCase()} [${catSkills.length}]`, color: 'text-nano-cyan font-bold text-xs' });
             catSkills.forEach(s => {
-              const bars = Math.round(s.level / 10);
-              const barStr = '█'.repeat(bars) + '░'.repeat(10 - bars);
               lines.push({
                 type: 'system',
-                text: `    ${s.name.padEnd(16, ' ')} [${barStr}] ${s.level}%`,
+                text: `    ${s.name}`,
                 color: s.level >= 80 ? 'text-nano-cyan font-mono' : s.level >= 60 ? 'text-slate-700 dark:text-gray-300 font-mono' : 'text-slate-600 dark:text-gray-400 font-mono'
               });
             });
@@ -412,7 +410,7 @@ export default function ContactTerminal() {
       
       {/* Terminal Window with CRT Scanline & Text Glow */}
       <div 
-        className="font-mono text-xs md:text-sm p-5 min-h-[250px] sm:min-h-[350px] max-h-[250px] sm:max-h-[350px] overflow-y-auto cursor-text bg-slate-50/95 dark:bg-[#030305] custom-scrollbar relative"
+        className="font-mono text-xs md:text-sm p-3 sm:p-5 min-h-[200px] sm:min-h-[320px] max-h-[42dvh] sm:max-h-[350px] overflow-y-auto cursor-text bg-slate-50/95 dark:bg-[#030305] custom-scrollbar relative"
         onClick={() => {
           terminalSound.init();
           inputRef.current?.focus();
@@ -438,7 +436,7 @@ export default function ContactTerminal() {
           {/* Active Input Line */}
           {mode !== 'booting' && mode !== 'sending' && !isMatrixActive && (
             <div className="flex mt-1 items-center">
-              <span className="text-nano-cyan mr-2 whitespace-nowrap font-bold">{getCurrentPrompt()}</span>
+              <span className="text-nano-cyan mr-2 font-bold break-all">{getCurrentPrompt()}</span>
               <input
                 ref={inputRef}
                 type="text"
