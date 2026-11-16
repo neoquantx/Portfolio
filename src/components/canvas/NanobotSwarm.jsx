@@ -1,10 +1,19 @@
-import React, { useRef, useMemo, useEffect } from 'react';
+import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useTheme } from '../../context/ThemeContext';
 import { terminalSound } from '../../utils/terminalSound';
 
-const PARTICLE_COUNT = 8500;
+function getAdaptiveParticleCount() {
+  try {
+    if (typeof window === 'undefined') return 8500;
+    const coarse = window.matchMedia?.('(pointer: coarse)').matches;
+    const cores = navigator.hardwareConcurrency || 8;
+    if (coarse || window.innerWidth < 768 || cores <= 4) return 3200;
+    return 8500;
+  } catch { return 8500; }
+}
+const PARTICLE_COUNT = 8500; // fallback; component uses adaptive count
 
 // Scratch vectors to eliminate GC pauses
 const _scratchVec = new THREE.Vector3();
@@ -162,11 +171,13 @@ void main() {
 `;
 
 export default function NanobotSwarm({ 
-  isOverclocked = false 
+  isOverclocked = false,
+  perf = null
 }) {
   const currentProgress = useRef(0);
   const pointsRef = useRef();
   const { isDark } = useTheme();
+  const [particleCount] = useState(() => getAdaptiveParticleCount());
   
   const windowMouseNorm = useRef({ x: 0, y: 0 });
   const isMouseActive = useRef(false);
@@ -195,7 +206,10 @@ export default function NanobotSwarm({
   }), []);
 
   useEffect(() => {
+    const isCoarse = window.matchMedia?.('(pointer: coarse)').matches;
     const handlePointerMove = (e) => {
+      // On touch, pointermove fires during scroll — skip graviton to avoid jank
+      if (isCoarse) return;
       windowMouseNorm.current.x = (e.clientX / window.innerWidth) * 2 - 1;
       windowMouseNorm.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
       isMouseActive.current = true;
@@ -228,14 +242,14 @@ export default function NanobotSwarm({
   }, []);
 
   const geometryData = useMemo(() => {
-    const pos0 = new Float32Array(PARTICLE_COUNT * 3);
-    const pos1 = new Float32Array(PARTICLE_COUNT * 3);
-    const pos2 = new Float32Array(PARTICLE_COUNT * 3);
-    const pos3 = new Float32Array(PARTICLE_COUNT * 3);
-    const aSize = new Float32Array(PARTICLE_COUNT);
-    const aSpeed = new Float32Array(PARTICLE_COUNT);
+    const pos0 = new Float32Array(particleCount * 3);
+    const pos1 = new Float32Array(particleCount * 3);
+    const pos2 = new Float32Array(particleCount * 3);
+    const pos3 = new Float32Array(particleCount * 3);
+    const aSize = new Float32Array(particleCount);
+    const aSpeed = new Float32Array(particleCount);
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+    for (let i = 0; i < particleCount; i++) {
       aSize[i] = 0.7 + Math.random() * 0.6;
       aSpeed[i] = 0.5 + Math.random() * 0.8;
 
@@ -255,11 +269,11 @@ export default function NanobotSwarm({
       pos1[i * 3 + 2] = (Math.random() - 0.5) * 18.0;
 
       // 3. State 2 (Level 3 & 4): 3D Double Helix & Stream (Centered at 0, 0, 0)
-      const t = (i / PARTICLE_COUNT) * Math.PI * 8.0;
+      const t = (i / particleCount) * Math.PI * 8.0;
       const strand = (i % 2 === 0) ? 1.0 : -1.0;
       const helixRadius = 18.0 + (Math.random() - 0.5) * 4.0;
       pos2[i * 3]     = Math.cos(t + (strand === 1.0 ? 0.0 : Math.PI)) * helixRadius + (Math.random() - 0.5) * 3.0;
-      pos2[i * 3 + 1] = ((i / PARTICLE_COUNT) - 0.5) * 46.0 + (Math.random() - 0.5) * 3.0;
+      pos2[i * 3 + 1] = ((i / particleCount) - 0.5) * 46.0 + (Math.random() - 0.5) * 3.0;
       pos2[i * 3 + 2] = Math.sin(t + (strand === 1.0 ? 0.0 : Math.PI)) * helixRadius + (Math.random() - 0.5) * 3.0;
 
       // 4. State 3 (Level 5): 3D Quantum Core Sphere with Orbiting Equatorial Ring (Centered at 0, 0, 0)
@@ -280,7 +294,7 @@ export default function NanobotSwarm({
     }
 
     return { pos0, pos1, pos2, pos3, aSize, aSpeed };
-  }, []);
+  }, [particleCount]);
 
   useFrame((state) => {
     if (!pointsRef.current || !pointsRef.current.material) return;
@@ -343,7 +357,8 @@ export default function NanobotSwarm({
     );
     
     // Smooth 3D rotation centered on the swarm itself
-    const rotSpeed = isOverclocked ? 0.08 : 0.03;
+    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const rotSpeed = prefersReduced ? 0.008 : (isOverclocked ? 0.08 : 0.03);
     pointsRef.current.rotation.x = state.clock.elapsedTime * rotSpeed + windowMouseNorm.current.y * 0.1;
     pointsRef.current.rotation.y = state.clock.elapsedTime * (rotSpeed * 1.5) + windowMouseNorm.current.x * 0.1;
   });
@@ -351,13 +366,13 @@ export default function NanobotSwarm({
   return (
     <points ref={pointsRef} position={[0, 0, -16]}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={PARTICLE_COUNT} array={geometryData.pos0} itemSize={3} />
-        <bufferAttribute attach="attributes-pos0" count={PARTICLE_COUNT} array={geometryData.pos0} itemSize={3} />
-        <bufferAttribute attach="attributes-pos1" count={PARTICLE_COUNT} array={geometryData.pos1} itemSize={3} />
-        <bufferAttribute attach="attributes-pos2" count={PARTICLE_COUNT} array={geometryData.pos2} itemSize={3} />
-        <bufferAttribute attach="attributes-pos3" count={PARTICLE_COUNT} array={geometryData.pos3} itemSize={3} />
-        <bufferAttribute attach="attributes-aSize" count={PARTICLE_COUNT} array={geometryData.aSize} itemSize={1} />
-        <bufferAttribute attach="attributes-aSpeed" count={PARTICLE_COUNT} array={geometryData.aSpeed} itemSize={1} />
+        <bufferAttribute attach="attributes-position" count={particleCount} array={geometryData.pos0} itemSize={3} />
+        <bufferAttribute attach="attributes-pos0" count={particleCount} array={geometryData.pos0} itemSize={3} />
+        <bufferAttribute attach="attributes-pos1" count={particleCount} array={geometryData.pos1} itemSize={3} />
+        <bufferAttribute attach="attributes-pos2" count={particleCount} array={geometryData.pos2} itemSize={3} />
+        <bufferAttribute attach="attributes-pos3" count={particleCount} array={geometryData.pos3} itemSize={3} />
+        <bufferAttribute attach="attributes-aSize" count={particleCount} array={geometryData.aSize} itemSize={1} />
+        <bufferAttribute attach="attributes-aSpeed" count={particleCount} array={geometryData.aSpeed} itemSize={1} />
       </bufferGeometry>
       <shaderMaterial
         vertexShader={vertexShader}
