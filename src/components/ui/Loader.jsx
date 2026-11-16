@@ -27,42 +27,63 @@ const bootSequence = [
 ];
 
 const Loader = ({ onComplete }) => {
-  const [hasStarted, setHasStarted] = useState(false);
   const [lines, setLines] = useState([]);
   const [isComplete, setIsComplete] = useState(false);
   const [glitch, setGlitch] = useState(false);
 
+  // Auto-boot: no click gate. Sound never blocks boot.
   useEffect(() => {
-    if (!hasStarted) return;
-
     let currentIndex = 0;
     let timeout;
+    let doneTimeout;
+    let cancelled = false;
 
     try {
       terminalSound.init();
-      terminalSound.toggleSound(true);
+      // SoundToggle owns sound state after user gesture; never force on here
     } catch(e) {}
 
+    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReduced) {
+      setLines([...bootSequence]);
+      setGlitch(true);
+      doneTimeout = setTimeout(() => { if (!cancelled) setIsComplete(true); }, 350);
+      return () => { cancelled = true; if (doneTimeout) clearTimeout(doneTimeout); };
+    }
+
     const addLine = () => {
+      if (cancelled) return;
       if (currentIndex < bootSequence.length) {
         const text = bootSequence[currentIndex]; // capture before increment
         if (typeof text === 'string') {
           setLines(prev => [...prev, text]);
         }
-        try { terminalSound.playKeyClick(); } catch(e) {}
         currentIndex++;
-        const delay = Math.random() * 80 + 25;
+        const isMobile = window.innerWidth < 768;
+        const delay = isMobile ? Math.random() * 30 + 12 : Math.random() * 70 + 22;
         timeout = setTimeout(addLine, delay);
       } else {
         setGlitch(true);
-        try { terminalSound.playCommandEnter(); } catch(e) {}
-        setTimeout(() => setIsComplete(true), 600);
+        doneTimeout = setTimeout(() => { if (!cancelled) setIsComplete(true); }, 400);
       }
     };
 
-    timeout = setTimeout(addLine, 300);
-    return () => clearTimeout(timeout);
-  }, [hasStarted]);
+    timeout = setTimeout(addLine, 120);
+    return () => { cancelled = true; if (timeout) clearTimeout(timeout); if (doneTimeout) clearTimeout(doneTimeout); };
+  }, []);
+
+  const handleSkip = () => {
+    setLines([...bootSequence]);
+    setGlitch(true);
+    setIsComplete(true);
+  };
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape' || e.key === ' ') handleSkip(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
     <AnimatePresence onExitComplete={onComplete}>
@@ -91,58 +112,46 @@ const Loader = ({ onComplete }) => {
             N.I.M.B.U.S OS — v9.0.1
           </div>
 
-          {!hasStarted ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 z-20">
-              <div className="text-[#00f0ff]/40 text-[10px] tracking-[0.5em] uppercase mb-2">
-                Neoquantx Portfolio OS
-              </div>
-              <button
-                onClick={() => setHasStarted(true)}
-                className="relative px-8 py-3.5 border-2 border-[#00f0ff] text-[#00f0ff] text-sm font-bold uppercase tracking-[0.3em] transition-all duration-300 hover:bg-[#00f0ff] hover:text-[#020617] shadow-[0_0_20px_rgba(0,240,255,0.25)] hover:shadow-[0_0_40px_rgba(0,240,255,0.7)]"
-              >
-                INITIALIZE SYSTEM
-              </button>
-              <motion.div
-                animate={{ opacity: [1, 0] }}
-                transition={{ repeat: Infinity, duration: 1, ease: 'easeInOut' }}
-                className="text-[#00f0ff]/50 text-[10px] tracking-widest"
-              >
-                — PRESS TO BOOT —
-              </motion.div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-0.5 relative z-20 w-full max-w-2xl">
-              {lines.filter(Boolean).map((line, i) => {
-                const isLast = i === lines.length - 1;
-                const isWarning = line?.includes('[WARNING]');
-                const isOk = line?.includes('[OK]');
-                const isOnline = line?.includes('ONLINE');
-                return (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.1 }}
-                    className={`leading-relaxed ${
-                      isOnline ? 'text-white font-bold text-base' :
-                      isWarning ? 'text-amber-400' :
-                      isOk ? 'text-emerald-400' :
-                      isLast ? 'text-white font-semibold animate-pulse' :
-                      'text-[#00f0ff]/70'
-                    }`}
-                  >
-                    <span className="text-slate-600 mr-3 select-none">[{String(i).padStart(2,'0')}]</span>
-                    {line}
-                  </motion.div>
-                );
-              })}
-              <motion.div
-                animate={{ opacity: [1, 0] }}
-                transition={{ repeat: Infinity, duration: 0.7 }}
-                className="w-2.5 h-[1.1em] bg-[#00f0ff] mt-1 inline-block"
-              />
-            </div>
-          )}
+          {/* Skip — never trap the user */}
+          <button
+            onClick={handleSkip}
+            aria-label="Skip boot sequence"
+            className="absolute top-16 right-4 sm:top-5 sm:right-5 z-30 px-3.5 py-2 min-h-[44px] border border-[#00f0ff]/40 text-[#00f0ff]/80 text-[10px] font-mono tracking-[0.25em] uppercase hover:bg-[#00f0ff]/10 hover:text-[#00f0ff] transition-colors"
+          >
+            SKIP ▸
+          </button>
+
+          <div className="flex flex-col gap-0.5 relative z-20 w-full max-w-2xl">
+            {lines.filter(Boolean).map((line, i) => {
+              const isLast = i === lines.length - 1;
+              const isWarning = line?.includes('[WARNING]');
+              const isOk = line?.includes('[OK]');
+              const isOnline = line?.includes('ONLINE');
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.1 }}
+                  className={`leading-relaxed ${
+                    isOnline ? 'text-white font-bold text-base' :
+                    isWarning ? 'text-amber-400' :
+                    isOk ? 'text-emerald-400' :
+                    isLast ? 'text-white font-semibold animate-pulse' :
+                    'text-[#00f0ff]/70'
+                  }`}
+                >
+                  <span className="text-slate-600 mr-3 select-none">[{String(i).padStart(2,'0')}]</span>
+                  {line}
+                </motion.div>
+              );
+            })}
+            <motion.div
+              animate={{ opacity: [1, 0] }}
+              transition={{ repeat: Infinity, duration: 0.7 }}
+              className="w-2.5 h-[1.1em] bg-[#00f0ff] mt-1 inline-block"
+            />
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
