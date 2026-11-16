@@ -13,7 +13,7 @@ export default function ProjectSlide({ project, isActive, onClose }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/60 backdrop-blur-md pointer-events-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-8 bg-black/60 backdrop-blur-md pointer-events-auto"
           onClick={onClose}
         >
           <motion.div
@@ -21,7 +21,7 @@ export default function ProjectSlide({ project, isActive, onClose }) {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 30 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-black/40 backdrop-blur-2xl border border-white/[0.08] rounded-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]"
+            className="relative w-full max-w-6xl max-h-[92dvh] overflow-y-auto bg-black/40 backdrop-blur-2xl border border-white/[0.08] rounded-2xl sm:rounded-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]"
             onClick={(e) => e.stopPropagation()}
           >
             <button 
@@ -31,9 +31,9 @@ export default function ProjectSlide({ project, isActive, onClose }) {
               <X size={20} />
             </button>
 
-            <div className="flex flex-col lg:flex-row min-h-[600px]">
+            <div className="flex flex-col lg:flex-row min-h-[420px] sm:min-h-[520px] lg:min-h-[600px]">
               {/* Left Side: Content */}
-              <div className="flex-1 p-8 md:p-12 lg:p-16 flex flex-col justify-center relative z-10 order-2 lg:order-1">
+              <div className="flex-1 p-4 sm:p-8 md:p-12 lg:p-16 flex flex-col justify-center relative z-10 order-2 lg:order-1">
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
