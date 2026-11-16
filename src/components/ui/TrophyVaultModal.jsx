@@ -4,6 +4,13 @@ import { Trophy, X, Award, Calendar, ExternalLink, ShieldCheck, Lock } from 'luc
 import { portfolioData } from '../../config/portfolio';
 import { useTheme } from '../../context/ThemeContext';
 
+const VAULT_CATEGORIES = [
+  { key: 'hackathons', label: 'Hackathons' },
+  { key: 'workshops', label: 'Workshops' },
+  { key: 'certificates', label: 'Certificates' },
+  { key: 'beyond', label: 'Beyond the Syllabus' },
+];
+
 const TrophyVaultModal = ({ isOpen, onClose }) => {
   const [selectedTrophy, setSelectedTrophy] = useState(null);
   const [decrypting, setDecrypting] = useState(false);
@@ -22,7 +29,7 @@ const TrophyVaultModal = ({ isOpen, onClose }) => {
   return (
     <AnimatePresence>
       <div 
-        className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 pointer-events-auto select-none"
+        className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-6 pointer-events-auto select-none"
         onClick={onClose}
       >
         {/* Backdrop */}
@@ -39,17 +46,17 @@ const TrophyVaultModal = ({ isOpen, onClose }) => {
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.94, opacity: 0, y: 20 }}
           onClick={(e) => e.stopPropagation()}
-          className={`relative w-full max-w-5xl h-[85vh] rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-2xl border transition-colors duration-300 ${
+          className={`relative w-full max-w-5xl h-[88dvh] md:h-[85vh] rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-2xl border transition-colors duration-300 ${
             isDark 
               ? 'bg-slate-950/95 border-cyan-500/30 text-slate-100 shadow-[0_0_50px_rgba(0,240,255,0.15)]' 
               : 'bg-slate-50/95 border-sky-500/30 text-slate-900 shadow-[0_20px_50px_rgba(14,165,233,0.2)]'
           }`}
         >
           {/* Header (Mobile) / Sidebar */}
-          <div className={`md:w-1/3 border-b md:border-b-0 md:border-r flex flex-col max-h-[38vh] md:max-h-none transition-colors ${
+          <div className={`md:w-1/3 border-b md:border-b-0 md:border-r flex flex-col max-h-[38dvh] md:max-h-none transition-colors ${
             isDark ? 'border-cyan-500/20 bg-slate-900/60' : 'border-sky-500/20 bg-slate-100/90'
           }`}>
-            <div className={`p-5 sm:p-6 border-b flex justify-between items-center ${
+            <div className={`p-4 sm:p-6 border-b flex justify-between items-start gap-3 ${
               isDark ? 'border-cyan-500/20' : 'border-sky-500/20'
             }`}>
               <div>
@@ -77,16 +84,30 @@ const TrophyVaultModal = ({ isOpen, onClose }) => {
               </button>
             </div>
 
-            {/* List of Trophies */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-              {portfolioData.hackathons.map((hackathon) => {
+            {/* Grouped list: Hackathons / Workshops / Certificates / Beyond the Syllabus */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 custom-scrollbar">
+              {VAULT_CATEGORIES.map((cat) => {
+                const items = portfolioData.hackathons.filter((h) => (h.category || 'hackathons') === cat.key);
+                if (items.length === 0) return null;
+                return (
+                  <div key={cat.key} className="mb-4 last:mb-0">
+                    <div className={`sticky top-0 z-10 -mx-1 px-1 py-1.5 mb-2 flex items-center justify-between backdrop-blur-sm ${
+                      isDark ? 'bg-slate-900/90' : 'bg-slate-100/90'
+                    }`}>
+                      <span className={`text-[10px] font-mono font-bold tracking-[0.2em] uppercase ${
+                        isDark ? 'text-cyan-400' : 'text-sky-700'
+                      }`}>{cat.label}</span>
+                      <span className={`text-[10px] font-mono ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{items.length}</span>
+                    </div>
+                    <div className="space-y-2.5">
+              {items.map((hackathon) => {
                 const isSelected = selectedTrophy?.id === hackathon.id;
                 return (
                   <button
                     key={hackathon.id}
                     type="button"
                     onClick={() => handleSelectTrophy(hackathon)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all duration-300 relative overflow-hidden group ${
+                    className={`w-full text-left p-3 sm:p-4 rounded-xl border transition-all duration-300 relative overflow-hidden group min-w-0 ${
                       isSelected 
                         ? isDark 
                           ? 'border-cyan-400 bg-cyan-950/40 text-cyan-200 shadow-[0_0_15px_rgba(0,240,255,0.2)]' 
@@ -97,8 +118,8 @@ const TrophyVaultModal = ({ isOpen, onClose }) => {
                     }`}
                     data-hoverable="true"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className={`font-bold transition-colors line-clamp-1 ${
+                    <div className="flex justify-between items-start mb-1.5 min-w-0">
+                      <h3 className={`font-bold transition-colors line-clamp-2 break-words text-[15px] leading-snug min-w-0 ${
                         isSelected 
                           ? isDark ? 'text-cyan-300' : 'text-sky-900'
                           : isDark ? 'text-slate-200 group-hover:text-cyan-300' : 'text-slate-800 group-hover:text-sky-700'
@@ -106,12 +127,11 @@ const TrophyVaultModal = ({ isOpen, onClose }) => {
                         {hackathon.title}
                       </h3>
                     </div>
-                    <div className={`flex items-center gap-3 text-xs font-mono ${
+                    <div className={`flex flex-col gap-1 text-[11px] font-mono min-w-0 ${
                       isDark ? 'text-slate-400' : 'text-slate-600'
                     }`}>
-                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {hackathon.date}</span>
-                      <span>|</span>
-                      <span className={isDark ? 'text-cyan-400 font-bold' : 'text-sky-600 font-bold'}>{hackathon.role}</span>
+                      <span className="flex items-center gap-1 whitespace-nowrap"><Calendar className="w-3 h-3 shrink-0" /> {hackathon.date}</span>
+                      <span className={`font-bold break-words leading-snug ${isDark ? 'text-cyan-400' : 'text-sky-600'}`}>{hackathon.role}</span>
                     </div>
                     
                     {/* Active Indicator */}
@@ -124,6 +144,10 @@ const TrophyVaultModal = ({ isOpen, onClose }) => {
                       />
                     )}
                   </button>
+                );
+              })}
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -151,7 +175,7 @@ const TrophyVaultModal = ({ isOpen, onClose }) => {
             </button>
 
             {selectedTrophy ? (
-              <div className="flex-1 p-6 sm:p-10 overflow-y-auto custom-scrollbar flex flex-col">
+              <div className="flex-1 p-4 sm:p-6 lg:p-10 overflow-y-auto custom-scrollbar flex flex-col min-w-0">
                 {decrypting ? (
                   <div className={`flex-1 flex flex-col items-center justify-center font-mono space-y-4 ${
                     isDark ? 'text-cyan-400' : 'text-sky-600'
@@ -175,14 +199,14 @@ const TrophyVaultModal = ({ isOpen, onClose }) => {
                     animate={{ opacity: 1, y: 0 }}
                     className="flex-1 flex flex-col max-w-3xl mx-auto w-full"
                   >
-                    <div className={`flex items-center gap-2 font-mono text-xs font-bold mb-3 ${
+                    <div className={`flex items-start gap-2 font-mono text-[10px] sm:text-xs font-bold mb-3 break-all ${
                       isDark ? 'text-cyan-400' : 'text-sky-600'
                     }`}>
                       <ShieldCheck className="w-4 h-4" />
                       <span>CLEARANCE: GRANTED // LOG #{selectedTrophy.id.toUpperCase()}</span>
                     </div>
                     
-                    <h2 className={`text-2xl sm:text-4xl font-bold font-space mb-2 leading-tight ${
+                    <h2 className={`text-xl sm:text-3xl lg:text-4xl font-bold font-space mb-2 leading-tight break-words ${
                       isDark ? 'text-white' : 'text-slate-900'
                     }`}>
                       {selectedTrophy.title}
@@ -241,7 +265,7 @@ const TrophyVaultModal = ({ isOpen, onClose }) => {
                           <Award className="w-4 h-4" /> Official Credential Verification
                         </h4>
                         
-                        <div className={`w-full aspect-[4/3] max-h-[300px] border rounded-xl overflow-hidden relative group flex items-center justify-center ${
+                        <div className={`w-full aspect-[4/3] max-h-[200px] sm:max-h-[300px] border rounded-xl overflow-hidden relative group flex items-center justify-center ${
                           isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-300'
                         }`}>
                           {selectedTrophy.certificate_url ? (
