@@ -12,7 +12,7 @@ export default function ThemeToggle() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 2, duration: 1, ease: [0.16, 1, 0.3, 1] }}
       onClick={toggleTheme}
-      className="fixed top-6 right-6 z-50 flex items-center justify-center w-12 h-12 rounded-lg module-glass hover:scale-105 transition-transform"
+      className="fixed top-3 right-3 sm:top-6 sm:right-6 z-50 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg module-glass hover:scale-105 transition-transform"
       aria-label="Toggle Theme"
     >
       <motion.div
