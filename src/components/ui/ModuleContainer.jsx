@@ -9,7 +9,7 @@ export default function ModuleContainer({
 }) {
   return (
     <div
-      className={`relative module-glass p-8 md:p-12 overflow-hidden group ${className}`}
+      className={`relative module-glass p-4 sm:p-6 md:p-10 lg:p-12 overflow-hidden group ${className}`}
       {...props}
     >
       {/* Corner Brackets - Using CSS variables from theme */}
