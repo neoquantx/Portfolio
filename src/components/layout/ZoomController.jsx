@@ -270,7 +270,7 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
                   </div>
                   <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-100 dark:bg-nano-cyan/10 border border-sky-300 dark:border-nano-cyan/30 text-[10px] font-mono text-sky-800 dark:text-nano-cyan font-bold">
                     <span className="w-1.5 h-1.5 rounded-full bg-sky-600 dark:bg-nano-cyan animate-pulse" />
-                    <span>28 NEURAL NODES ACTIVE</span>
+                    <span>{portfolioData.skills.length} NEURAL NODES ACTIVE</span>
                   </div>
                 </div>
 
@@ -290,7 +290,7 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
                       }`}
                       data-hoverable="true"
                     >
-                      {cat === 'ALL' ? '⚡ ALL (28)' : cat}
+                      {cat === 'ALL' ? `⚡ ALL (${portfolioData.skills.length})` : cat}
                     </button>
                   ))}
                 </div>
