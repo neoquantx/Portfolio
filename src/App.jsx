@@ -4,11 +4,12 @@ import Cursor from './components/ui/Cursor';
 import SoundToggle from './components/ui/SoundToggle';
 import ThemeToggle from './components/ui/ThemeToggle';
 import ZoomController from './components/layout/ZoomController';
-const NanoScene = React.lazy(() => import('./components/canvas/NanoScene'));
+import DataRain from './components/ui/data-rain';
 import TerminalEasterEgg from './components/ui/TerminalEasterEgg';
 import { useMouseParallax } from './hooks/useMouseParallax';
 import { portfolioData } from './config/portfolio';
 import { terminalSound } from './utils/terminalSound';
+import { useTheme } from './context/ThemeContext';
 
 // Isolated component so mouse moves don't re-render the whole App
 function GridBackground() {
@@ -34,6 +35,12 @@ function GridBackground() {
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isOverclocked, setIsOverclocked] = useState(false);
+  const { isDark } = useTheme();
+
+  // DataRain palette follows the app theme (project accents only).
+  const rainPalette = React.useMemo(() => (isDark
+    ? { calm: '#00f0ff', mid: '#a855f7', hot: '#f97316' }
+    : { calm: '#0ea5e9', mid: '#3b82f6', hot: '#f97316' }), [isDark]);
 
   // Keyboard shortcuts: Shift+O and Konami Code
   useEffect(() => {
@@ -60,57 +67,66 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Global click feedback (previously lived in the 3D swarm): every
+  // pointer-down resumes the audio engine and fires a burst.
+  useEffect(() => {
+    const onDown = () => {
+      try {
+        terminalSound.init();
+        terminalSound.playShockwaveBurst();
+      } catch {}
+    };
+    window.addEventListener('pointerdown', onDown);
+    return () => window.removeEventListener('pointerdown', onDown);
+  }, []);
+
   return (
     <>
       {/* Loader — z-index 9999, on top of everything */}
       {isLoading && <Loader onComplete={() => setIsLoading(false)} />}
 
-      {/* Main app — always in DOM but hidden behind loader. Responsive scroll distance:
-          500vh desktop, 420vh mobile to reduce endless scroll feeling */}
-      <div className="app-scroll" style={{ height: 'var(--app-scroll-h, 500vh)' }}>
-        <div className={isOverclocked ? 'animate-pulse-fast' : ''}>
+      {/* Portfolio sections live in normal document flow and scroll natively.
+          The 3D canvas + grid stay fixed behind them. */}
+      <div className={isOverclocked ? 'animate-pulse-fast' : ''}>
 
-          {/* UI elements — only show after load to prevent click-through */}
-          {!isLoading && (
-            <>
-              <Cursor />
-              <SoundToggle />
-              <ThemeToggle />
-            </>
-          )}
+        {/* UI elements — only show after load to prevent click-through */}
+        {!isLoading && (
+          <>
+            <Cursor />
+            <SoundToggle />
+            <ThemeToggle />
+          </>
+        )}
 
-          {/* Scan line overlay */}
-          <div className="scan-line-overlay" style={{ zIndex: 5 }} />
+        {/* Scan line overlay */}
+        <div className="scan-line-overlay" style={{ zIndex: 5 }} />
 
-          {/* Grid parallax background — z-index 0 */}
-          <GridBackground />
+        {/* Grid parallax background — z-index 0 */}
+        <GridBackground />
 
-          {/* 3D Canvas — z-index 1 */}
-          <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 1 }}>
-            <React.Suspense fallback={null}>
-              <NanoScene isOverclocked={isOverclocked} />
-            </React.Suspense>
-          </div>
-
-          {/* HTML UI overlay — z-index 10 */}
-          {!isLoading && (
-            <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 10 }}>
-              <ZoomController
-                portfolioData={portfolioData}
-                isOverclocked={isOverclocked}
-                setIsOverclocked={setIsOverclocked}
-              />
-            </div>
-          )}
-
-          {/* Terminal Easter Egg — z-index 20, above UI but below modals */}
-          {!isLoading && (
-            <div style={{ zIndex: 20 }}>
-              <TerminalEasterEgg setIsOverclocked={setIsOverclocked} />
-            </div>
-          )}
-
+        {/* DataRain canvas background — z-index 1 */}
+        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 1 }}>
+          <DataRain palette={rainPalette} />
         </div>
+
+        {/* Content sections — real page flow, z-index 10 */}
+        {!isLoading && (
+          <div className="relative" style={{ zIndex: 10 }}>
+            <ZoomController
+              portfolioData={portfolioData}
+              isOverclocked={isOverclocked}
+              setIsOverclocked={setIsOverclocked}
+            />
+          </div>
+        )}
+
+        {/* Terminal Easter Egg — z-index 20, above UI but below modals */}
+        {!isLoading && (
+          <div style={{ zIndex: 20 }}>
+            <TerminalEasterEgg setIsOverclocked={setIsOverclocked} />
+          </div>
+        )}
+
       </div>
     </>
   );
