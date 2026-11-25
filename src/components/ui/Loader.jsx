@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { terminalSound } from '../../utils/terminalSound';
+import LoadingSpinner from '../shitui/LoadingSpinner';
 
 // Dynamic BIOS date from today
 const getBiosDate = () => {
@@ -146,11 +147,14 @@ const Loader = ({ onComplete }) => {
                 </motion.div>
               );
             })}
-            <motion.div
-              animate={{ opacity: [1, 0] }}
-              transition={{ repeat: Infinity, duration: 0.7 }}
-              className="w-2.5 h-[1.1em] bg-[#00f0ff] mt-1 inline-block"
-            />
+            <div className="mt-3 flex items-center gap-3">
+              <LoadingSpinner text="BOOTING N.I.M.B.U.S" size="sm" className="boot-spinner font-mono" />
+              <motion.div
+                animate={{ opacity: [1, 0] }}
+                transition={{ repeat: Infinity, duration: 0.7 }}
+                className="w-2.5 h-[1.1em] bg-[#00f0ff] inline-block"
+              />
+            </div>
           </div>
         </motion.div>
       )}
