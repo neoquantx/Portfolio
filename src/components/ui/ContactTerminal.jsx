@@ -29,7 +29,7 @@ export default function ContactTerminal() {
   const [isMatrixActive, setIsMatrixActive] = useState(false);
   
   const inputRef = useRef(null);
-  const endRef = useRef(null);
+  const scrollRef = useRef(null);
 
   // Real-time clock & fluctuating telemetry ping
   useEffect(() => {
@@ -50,15 +50,17 @@ export default function ContactTerminal() {
     };
   }, []);
 
-  // Auto scroll to bottom of terminal
+  // Auto scroll the terminal pane only — scrollIntoView here used to drag
+  // the whole page down to this section on every new line.
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [history, mode]);
 
   // Keep focus on input
   useEffect(() => {
     if (mode !== 'booting' && mode !== 'sending') {
-      inputRef.current?.focus();
+      inputRef.current?.focus({ preventScroll: true });
     }
   }, [mode, history]);
 
@@ -409,11 +411,12 @@ export default function ContactTerminal() {
       </div>
       
       {/* Terminal Window with CRT Scanline & Text Glow */}
-      <div 
-        className="font-mono text-xs md:text-sm p-3 sm:p-5 min-h-[200px] sm:min-h-[320px] max-h-[42dvh] sm:max-h-[350px] overflow-y-auto cursor-text bg-slate-50/95 dark:bg-[#030305] custom-scrollbar relative"
+      <div
+        ref={scrollRef}
+        className="font-mono text-xs md:text-sm p-3 sm:p-5 min-h-[200px] sm:min-h-[320px] max-h-[42dvh] sm:max-h-[350px] overflow-y-auto cursor-text bg-slate-50/95 dark:bg-[#030305] custom-scrollbar scroll-zone relative"
         onClick={() => {
           terminalSound.init();
-          inputRef.current?.focus();
+          inputRef.current?.focus({ preventScroll: true });
         }}
       >
         {/* Subtle CRT Phosphor Glow Background Effect */}
@@ -452,7 +455,6 @@ export default function ContactTerminal() {
               />
             </div>
           )}
-          <div ref={endRef} />
         </div>
       </div>
     </ModuleContainer>
