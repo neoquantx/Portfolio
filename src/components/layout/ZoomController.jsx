@@ -1,21 +1,46 @@
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink, Mail, Github } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ExternalLink, Mail, Github, Home, Trophy, Rocket, Cpu } from 'lucide-react';
+import FloatingNavigation from '../shitui/FloatingNavigation';
 import ModuleContainer from '../ui/ModuleContainer';
 import ProjectSlide from '../ui/ProjectSlide';
 import ContactTerminal from '../ui/ContactTerminal';
 const ProjectSimulatorModal = React.lazy(() => import('../ui/ProjectSimulatorModal'));
-const TrophyVaultModal = React.lazy(() => import('../ui/TrophyVaultModal'));
+import TrophyRingSection from '../ui/TrophyRingSection';
 import { terminalSound } from '../../utils/terminalSound';
-import { useScrollProgress } from '../../hooks/useScrollProgress';
+import { useActiveSection, scrollToLevel } from '../../hooks/useScrollProgress';
 import ScrollPrompt from '../ui/ScrollPrompt';
+import { MagneticScatterText } from '../shitui/MagneticScatterText';
+import LiquidButton from '../shitui/LiquidButton';
 
 export default function ZoomController({ portfolioData, isOverclocked, setIsOverclocked }) {
-  const scrollProgress = useScrollProgress();
+  const { active, sectionRef } = useActiveSection(5);
   const [selectedSimulatorProject, setSelectedSimulatorProject] = useState(null);
-  const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [selectedSkillCategory, setSelectedSkillCategory] = useState('ALL');
   const [selectedActiveSkill, setSelectedActiveSkill] = useState(null);
+
+  const githubUrl = portfolioData.socials.find((s) => s.name === 'GitHub')?.url || 'https://github.com/neoquantx';
+
+  // Magnetic hero words react to the cursor — static text when the user
+  // prefers reduced motion. Touch devices are handled by disableOnMobile.
+  const allowMagnet = useMemo(() => {
+    try {
+      return !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    } catch { return true; }
+  }, []);
+
+  // Floating dock destinations — one icon per portfolio section.
+  const NAV_ITEMS = [
+    { id: 'surface', label: 'Surface', icon: <Home className="h-5 w-5" /> },
+    { id: 'deployments', label: 'Deployments', icon: <Rocket className="h-5 w-5" /> },
+    { id: 'skills', label: 'Skills', icon: <Cpu className="h-5 w-5" /> },
+    { id: 'trophies', label: 'Mission Logs', icon: <Trophy className="h-5 w-5" /> },
+    { id: 'contact', label: 'Contact', icon: <Mail className="h-5 w-5" /> },
+  ];
+  const handleDockSelect = (id) => {
+    const idx = NAV_ITEMS.findIndex((n) => n.id === id);
+    if (idx >= 0) scrollToLevel(idx + 1);
+  };
 
   // Link skills to matching projects
   const getLinkedProjects = (skillName) => {
@@ -32,57 +57,50 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
     });
   };
 
-  // Determine level (1-5)
-  const getZoomLevel = (p) => {
-    if (p <= 0.2) return 1;
-    if (p <= 0.4) return 2;
-    if (p <= 0.6) return 3;
-    if (p <= 0.8) return 4;
-    return 5;
-  };
-  
-  const level = getZoomLevel(scrollProgress);
+  // Active section (1-5) comes from the section observer. The page scrolls
+  // natively — no fake scroll height, no hysteresis, no scroll fighting.
+  const level = active;
 
-  const slideVariants = {
-    initial: { opacity: 0, y: 16, scale: 0.98 },
-    animate: { 
-      opacity: 1, 
-      y: 0, 
-      scale: 1, 
-      transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] } 
-    },
-    exit: { 
-      opacity: 0, 
-      y: -14, 
-      scale: 1.01, 
-      transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } 
+  // Sections stay mounted and animate once when scrolled into view — no
+  // remounts, no exit flashes, nothing fighting the scrollbar.
+  const sectionVariants = {
+    initial: { opacity: 0, y: 24 },
+    whileInView: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] }
     }
   };
+  const sectionViewport = { once: true, margin: '-12% 0px' };
 
   return (
-    <div className={`w-full h-full p-3 sm:p-6 md:p-12 lg:p-24 flex items-start md:items-center justify-center pointer-events-none overflow-y-auto custom-scrollbar ${isOverclocked ? 'animate-glitch' : ''}`}>
+    <div className={`relative w-full ${isOverclocked ? 'animate-glitch' : ''}`}>
       
-      {/* HUD Navigation Indicator — hidden on small screens */}
-      <div className="hidden sm:flex absolute top-8 sm:top-12 left-4 sm:left-12 flex-col gap-2 pointer-events-none">
-        {[1, 2, 3, 4, 5].map((l) => (
-          <div key={l} className="flex items-center gap-3">
-            <div className={`w-1 h-6 sm:h-8 transition-colors duration-500 ${level === l ? (isOverclocked ? 'bg-[#ff0055] shadow-[0_0_10px_#ff0055]' : 'bg-nano-cyan shadow-[0_0_10px_#00f0ff]') : 'bg-white/10'}`} />
-            <span className={`text-[9px] sm:text-[10px] tracking-[0.2em] font-mono transition-opacity duration-500 ${level === l ? (isOverclocked ? 'text-[#ff0055] opacity-100 font-bold' : 'text-nano-cyan opacity-100') : 'text-white/30 opacity-0'}`}>
-              {isOverclocked ? `OVR_${l}` : `Lvl 0${l}`}
-            </span>
-          </div>
-        ))}
-      </div>
+      {/* Floating dock navigation (ShitUI) — top-center on all screens, clear
+          of the theme toggle and the terminal button. Active icon follows the
+          section in view; tapping one travels there. */}
+      <FloatingNavigation
+        items={NAV_ITEMS}
+        activeId={NAV_ITEMS[Math.min(4, Math.max(0, level - 1))].id}
+        onSelect={handleDockSelect}
+        className="bottom-auto top-2 sm:top-4"
+      />
 
 
-      <AnimatePresence mode="wait">
-        {/* LEVEL 1: SURFACE */}
-        {level === 1 && (
-          <motion.div key="l1" {...slideVariants} className="w-full max-w-7xl mx-auto flex flex-col items-center justify-center pointer-events-auto max-h-full overflow-y-auto py-2">
+      {/* LEVEL 1: SURFACE */}
+      <motion.section data-level="1" ref={sectionRef(0)} {...sectionVariants} viewport={sectionViewport} className="relative w-full max-w-7xl mx-auto px-3 sm:px-6 md:px-12 lg:px-24 min-h-svh flex flex-col items-center justify-center py-16">
             <ModuleContainer className="text-center px-4 sm:px-10 md:px-16 py-6 sm:py-10 md:py-12">
-              <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-space font-bold tracking-tighter mb-3 sm:mb-4 text-glow text-text-primary break-words leading-none">
-                {portfolioData.personal.name}
-              </h1>
+              {allowMagnet ? (
+                <MagneticScatterText
+                  text={portfolioData.personal.name}
+                  className="font-space font-bold tracking-tighter leading-none text-glow text-3xl sm:text-5xl md:text-7xl lg:text-8xl mb-3 sm:mb-4"
+                  letterClassName="inline-block text-text-primary"
+                />
+              ) : (
+                <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-space font-bold tracking-tighter mb-3 sm:mb-4 text-glow text-text-primary break-words leading-none">
+                  {portfolioData.personal.name}
+                </h1>
+              )}
               <p className="font-mono tracking-[0.2em] sm:tracking-[0.3em] text-nano-cyan uppercase text-xs sm:text-sm md:text-base">
                 {portfolioData.personal.title}
               </p>
@@ -90,84 +108,42 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
                 {portfolioData.personal.tagline}
               </p>
               <div className="mt-5 sm:mt-6 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
-                <a
-                  href={`mailto:${portfolioData.personal.email}`}
-                  className="inline-flex items-center gap-2 min-h-[44px] px-4 sm:px-5 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-700 dark:bg-nano-cyan dark:hover:bg-cyan-300 text-white dark:text-slate-950 font-mono text-xs sm:text-sm font-bold tracking-wider transition-colors"
+                <LiquidButton
+                  onClick={() => { window.location.href = `mailto:${portfolioData.personal.email}`; }}
+                  backgroundColor="bg-sky-600 dark:bg-cyan-400"
+                  textColor="text-white dark:text-slate-950"
+                  className="p-1"
                   data-hoverable="true"
+                  aria-label="Email me"
                 >
                   <Mail className="w-4 h-4" /> Email Me
-                </a>
-                <a
-                  href={portfolioData.socials.find((s) => s.name === 'GitHub')?.url || 'https://github.com/neoquantx'}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 min-h-[44px] px-4 sm:px-5 py-2.5 rounded-lg border border-sky-500 dark:border-nano-cyan/50 text-sky-700 dark:text-nano-cyan hover:bg-sky-50 dark:hover:bg-nano-cyan/10 font-mono text-xs sm:text-sm font-bold tracking-wider transition-colors"
+                </LiquidButton>
+                <LiquidButton
+                  onClick={() => window.open(githubUrl, '_blank', 'noopener,noreferrer')}
+                  backgroundColor="bg-slate-300/80 dark:bg-cyan-950"
+                  textColor="text-sky-800 dark:text-cyan-200"
+                  className="p-1"
                   data-hoverable="true"
+                  aria-label="Open GitHub profile"
                 >
                   <Github className="w-4 h-4" /> GitHub
-                </a>
+                </LiquidButton>
               </div>
               <p className="mt-3 text-[11px] font-mono text-text-secondary break-all">{portfolioData.personal.email}</p>
             </ModuleContainer>
             <ScrollPrompt />
-          </motion.div>
-        )}
+      </motion.section>
 
-        {/* LEVEL 2: LATTICE / BIO */}
-        {level === 2 && (
-          <motion.div key="l2" {...slideVariants} className="w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 pointer-events-auto max-h-full overflow-y-auto py-2">
-            <div className="md:col-span-6 md:col-start-7 lg:col-span-5 lg:col-start-8 flex flex-col justify-center min-h-0">
-              <ModuleContainer delay={0.2}>
-                <h2 className="text-xs sm:text-sm font-mono text-sky-600 dark:text-nano-cyan tracking-widest mb-3 sm:mb-4 font-bold">[ IDENTITY_MATRIX ]</h2>
-                <h3 className="text-2xl sm:text-3xl font-space font-bold mb-4 sm:mb-6 text-text-primary">Systems Online.</h3>
-                <p className="text-text-secondary leading-relaxed font-space mb-5 sm:mb-8 text-sm sm:text-base">
-                  {portfolioData.personal.bio}
-                </p>
-                
-                <button
-                  onClick={() => {
-                    terminalSound.playCommandEnter();
-                    setIsVaultOpen(true);
-                  }}
-                  className="w-full py-4 px-6 rounded-xl bg-sky-600 hover:bg-sky-700 dark:bg-cyan-950/50 dark:hover:bg-cyan-900/60 text-white dark:text-nano-cyan border border-sky-500 dark:border-cyan-500/40 font-mono text-sm font-bold tracking-widest uppercase transition-all flex items-center justify-between group shadow-md dark:shadow-[0_0_20px_rgba(0,240,255,0.15)] hover:shadow-lg dark:hover:shadow-[0_0_30px_rgba(0,240,255,0.3)]"
-                  data-hoverable="true"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="w-2.5 h-2.5 rounded-full bg-white dark:bg-cyan-400 animate-pulse shadow-[0_0_8px_#ffffff]" />
-                    Access Mission Logs & Trophies
-                  </span>
-                  <span className="group-hover:translate-x-2 transition-transform">&rarr;</span>
-                </button>
 
-                {/* Journey — visible timeline (data: portfolioData.timeline, newest first) */}
-                <div className="mt-6 pt-5 border-t border-slate-200 dark:border-white/10 text-left">
-                  <h4 className="text-xs font-mono font-bold tracking-widest text-sky-600 dark:text-nano-cyan mb-3">[ JOURNEY ]</h4>
-                  <ol className="relative border-l border-slate-300 dark:border-slate-700 ml-1.5 max-h-[38dvh] md:max-h-[42dvh] overflow-y-auto pr-2 custom-scrollbar">
-                    {portfolioData.timeline.map((item, i) => (
-                      <li key={i} className="ml-4 pb-3.5 last:pb-1">
-                        <span className="absolute -left-[5px] mt-1 w-2.5 h-2.5 rounded-full bg-sky-500 dark:bg-nano-cyan shadow-[0_0_6px_var(--accent-primary)]" />
-                        <span className="text-[10px] font-mono font-bold text-sky-600 dark:text-nano-cyan">{item.year}</span>
-                        <p className="text-sm font-space font-bold text-text-primary leading-snug">{item.event}</p>
-                        <p className="text-xs text-text-secondary leading-relaxed">{item.description}</p>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              </ModuleContainer>
-            </div>
-          </motion.div>
-        )}
-
-        {/* LEVEL 3: LAB / PROJECTS */}
-        {level === 3 && (
-          <motion.div key="l3" {...slideVariants} className="w-full max-w-7xl mx-auto flex flex-col items-center pointer-events-auto w-full min-h-0 max-h-[calc(100dvh-1.5rem)] md:max-h-[calc(100dvh-6rem)]">
-            <ModuleContainer className="w-full mb-6 text-center !p-4 md:!p-6">
+        {/* LEVEL 2: LAB / PROJECTS */}
+      <motion.section data-level="2" ref={sectionRef(1)} {...sectionVariants} viewport={sectionViewport} className="w-full max-w-7xl mx-auto px-3 sm:px-6 md:px-12 lg:px-24 min-h-svh flex flex-col items-center justify-center py-16">
+            <ModuleContainer className="w-full mb-3 md:mb-6 text-center !p-4 md:!p-6 shrink-0">
               <h2 className="text-sm font-mono text-sky-600 dark:text-nano-purple tracking-widest mb-2 font-bold">[ ARCHIVE_DATA ]</h2>
               <h3 className="text-2xl md:text-3xl font-space font-bold mb-2 text-text-primary">Deployments</h3>
               <p className="text-text-secondary font-mono text-xs md:text-sm">Accessing mission-critical project modules · Click simulator to test live</p>
             </ModuleContainer>
 
-            <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 overflow-y-auto custom-scrollbar pb-6 px-1 min-h-0 max-h-[52dvh] md:max-h-[58dvh]">
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 overflow-y-auto custom-scrollbar scroll-zone pb-6 px-1 min-h-0 max-h-[46dvh] md:max-h-[58dvh]">
               {portfolioData.projects.map((proj, idx) => {
                 const simulatorLabel = 
                   proj.id === 2 ? '⚡ RUN LIVE OS SIMULATOR' :
@@ -254,19 +230,17 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
               onClose={() => setSelectedSimulatorProject(null)}
             />
             </React.Suspense>
-          </motion.div>
-        )}
+          </motion.section>
 
-        {/* LEVEL 4: DNA / SKILLS (INTERACTIVE SKILL REACTOR) */}
-        {level === 4 && (
-          <motion.div key="l4" {...slideVariants} className="w-full max-w-7xl mx-auto flex items-start justify-center pointer-events-auto w-full min-h-0 max-h-[calc(100dvh-1.5rem)] md:max-h-[calc(100dvh-6rem)] lg:max-h-[calc(100dvh-8rem)]">
+        {/* LEVEL 3: DNA / SKILLS (INTERACTIVE SKILL REACTOR) */}
+      <motion.section data-level="3" ref={sectionRef(2)} {...sectionVariants} viewport={sectionViewport} className="w-full max-w-7xl mx-auto px-3 sm:px-6 md:px-12 lg:px-24 min-h-svh flex items-start justify-center py-16">
             <div className="flex flex-col items-center justify-start text-center w-full">
               <ModuleContainer className="max-w-5xl w-full !p-4 md:!p-6 lg:!p-8">
                 {/* Header */}
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                   <div className="text-left">
                     <h2 className="text-xs md:text-sm font-mono text-sky-600 dark:text-nano-orange font-bold tracking-widest mb-0.5">[ CAPABILITY_MATRIX // SKILL REACTOR ]</h2>
-                    <p className="text-text-secondary text-[10px] md:text-xs font-mono font-medium">Click or hover any technology node to reveal connected mission deployments</p>
+                    <p className="text-text-secondary text-[10px] md:text-xs font-mono font-medium">Tap a technology node to reveal linked mission deployments</p>
                   </div>
                   <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-100 dark:bg-nano-cyan/10 border border-sky-300 dark:border-nano-cyan/30 text-[10px] font-mono text-sky-800 dark:text-nano-cyan font-bold">
                     <span className="w-1.5 h-1.5 rounded-full bg-sky-600 dark:bg-nano-cyan animate-pulse" />
@@ -334,7 +308,7 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
                 )}
 
                 {/* Scrollable Category Groups */}
-                <div className="space-y-3 md:space-y-4 text-left max-h-[36dvh] sm:max-h-[40dvh] md:max-h-[46dvh] lg:max-h-[50dvh] overflow-y-auto pr-1 custom-scrollbar">
+                <div className="space-y-3 md:space-y-4 text-left max-h-[34dvh] sm:max-h-[40dvh] md:max-h-[46dvh] lg:max-h-[50dvh] overflow-y-auto pr-1 custom-scrollbar scroll-zone">
                   {(() => {
                     const allCategories = ['Frontend', 'Backend', 'ML & AI', 'Mobile', 'Cloud & DB', 'DevOps', 'Core'];
                     const categories = selectedSkillCategory === 'ALL' 
@@ -440,23 +414,18 @@ export default function ZoomController({ portfolioData, isOverclocked, setIsOver
                 </div>
               </ModuleContainer>
             </div>
-          </motion.div>
-        )}
+          </motion.section>
+
+        {/* LEVEL 4: TROPHY RING */}
+      <section data-level="4" ref={sectionRef(3)} className="relative w-full">
+            <TrophyRingSection />
+          </section>
 
         {/* LEVEL 5: CORE / CONTACT */}
-        {level === 5 && (
-          <motion.div key="l5" {...slideVariants} className="w-full max-w-7xl mx-auto flex flex-col items-center justify-center pointer-events-auto max-h-full overflow-y-auto py-2">
+      <motion.section data-level="5" ref={sectionRef(4)} {...sectionVariants} viewport={sectionViewport} className="w-full max-w-7xl mx-auto px-3 sm:px-6 md:px-12 lg:px-24 min-h-svh flex flex-col items-center justify-center py-16">
             <ContactTerminal data={portfolioData.socials} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </motion.section>
 
-      <React.Suspense fallback={null}>
-      <TrophyVaultModal 
-        isOpen={isVaultOpen} 
-        onClose={() => setIsVaultOpen(false)} 
-      />
-      </React.Suspense>
     </div>
   );
 }
