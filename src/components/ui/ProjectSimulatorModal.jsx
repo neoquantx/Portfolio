@@ -47,6 +47,15 @@ export default function ProjectSimulatorModal({ project, isOpen, onClose }) {
     }
   }, [isOpen, project]);
 
+  // Lock the background page while the simulator is open so touch gestures
+  // scroll the simulator, never the portfolio levels behind it.
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [isOpen]);
+
   if (!isOpen || !project) return null;
 
   // Banker's Algorithm Step Engine
@@ -198,7 +207,7 @@ export default function ProjectSimulatorModal({ project, isOpen, onClose }) {
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 md:p-8 overflow-y-auto custom-scrollbar flex-1 flex flex-col gap-6">
+        <div className="p-5 md:p-8 overflow-y-auto custom-scrollbar scroll-zone flex-1 min-h-0 flex flex-col gap-6">
 
           {/* ========================================================= */}
           {/* SIMULATOR 1: BANKER'S ALGORITHM DEADLOCK AVOIDANCE */}
