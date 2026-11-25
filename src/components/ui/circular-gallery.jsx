@@ -42,8 +42,10 @@ const CircularGallery = React.forwardRef(function CircularGallery(
   const cardW = isMobile ? 220 : 300;
   const cardH = isMobile ? 300 : 400;
 
-  // Scroll-based rotation: full page scroll maps to one full turn.
+  // Scroll-based rotation (desktop ring only — the mobile pager ignores page
+  // scroll, so skip the per-tick re-renders there).
   useEffect(() => {
+    if (isMobile) return undefined;
     const handleScroll = () => {
       setIsScrolling(true);
       if (scrollTimeoutRef.current) {
@@ -66,7 +68,7 @@ const CircularGallery = React.forwardRef(function CircularGallery(
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, []);
+  }, [isMobile]);
 
   // Auto-rotation when not scrolling (off for reduced-motion users).
   useEffect(() => {
