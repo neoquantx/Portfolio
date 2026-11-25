@@ -79,15 +79,7 @@
   --glass-glow: 0 0 20px rgba(0, 240, 255, 0.2);
 }
 
-:root {
-  --app-scroll-h: 500vh;
-  --app-scroll-h: 500dvh;
-}
-@media (max-width: 767px) {
-  :root { --app-scroll-h: 460vh; --app-scroll-h: 460dvh; }
-}
 @media (prefers-reduced-motion: reduce) {
-  :root { --app-scroll-h: 380vh; }
   .scan-line-overlay { animation: none !important; }
 }
 
@@ -118,6 +110,113 @@ body {
 ::-webkit-scrollbar-thumb {
   background: var(--accent-primary);
   border-radius: 3px;
+}
+
+/* Thin scrollbars for inner panels (projects / skills / vault / terminal) */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-primary) transparent;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 999px;
+  opacity: 0.7;
+}
+
+/* Page-level smooth travel between levels. Inner panels keep their own
+   momentum scrolling without hijacking the window scroll. */
+html {
+  scroll-behavior: smooth;
+}
+/* Inner scroll zones: momentum on iOS, contained so a card swipe never
+   flings the whole page to the next level by accident. Page travel happens
+   when the gesture starts outside the card (padding / headers). */
+.scroll-zone {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+}
+/* Fixed HUD layers must never trap page scroll — only their interactive
+   children re-enable pointer events. */
+.hud-layer {
+  touch-action: pan-y;
+}
+
+/* ── DataRain canvas background (project palette) ─────────────── */
+:root {
+  --dr-bg-0: #020308;
+  --dr-bg-1: #05070d;
+  --dr-bg-2: #0a1020;
+  --dr-calm: #0ea5e9; /* light: ocean blue */
+  --dr-mid: #3b82f6; /* light: blue */
+  --dr-hot: #f97316; /* neon orange */
+  --dr-core: #ffffff;
+  --dr-vignette: 0.35;
+  --dr-grain: 0.04;
+  --dr-bloom-blur: 10px;
+  --dr-bloom-opacity: 0.6;
+}
+:root.dark {
+  --dr-calm: #00f0ff; /* plasma cyan */
+  --dr-mid: #a855f7; /* deep purple */
+  --dr-hot: #f97316; /* neon orange */
+  --dr-core: #eafcff;
+  --dr-vignette: 0.62;
+  --dr-grain: 0.05;
+}
+.dr-root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  animation: dr-fade-in 0.8s ease both;
+}
+.dr-root--contained { position: relative; }
+.dr-root canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.dr-bloom {
+  filter: blur(var(--dr-bloom-blur));
+  opacity: var(--dr-bloom-opacity);
+}
+.dr-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,var(--dr-vignette)) 100%);
+}
+.dr-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--dr-grain);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+}
+@keyframes dr-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ShitUI boot spinner: BIOS screen is always dark */
+.boot-spinner [class*="text-neutral-900"] {
+  color: #f8fafc;
+}
+.boot-spinner [class*="text-black"] {
+  color: #00f0ff;
 }
 
 /* 
