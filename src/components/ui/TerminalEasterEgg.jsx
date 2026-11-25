@@ -64,15 +64,16 @@ export default function TerminalEasterEgg({ setIsOverclocked }) {
     { text: 'NeoQuantX Terminal OS v2.4.1 — Type "help" for commands.', cls: 'text-[#00f0ff]/80' },
   ]);
   const [input, setInput] = useState('');
-  const endRef = useRef(null);
+  const scrollRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [history, isOpen]);
 
   useEffect(() => {
-    if (isOpen) setTimeout(() => inputRef.current?.focus(), 100);
+    if (isOpen) setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 100);
   }, [isOpen]);
 
   const addLines = (newLines) => setHistory(prev => [...prev, ...newLines]);
@@ -143,13 +144,12 @@ export default function TerminalEasterEgg({ setIsOverclocked }) {
             </div>
 
             {/* Output area */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 font-mono text-xs text-slate-400 custom-scrollbar">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 font-mono text-xs text-slate-400 custom-scrollbar scroll-zone">
               {history.map((line, i) => (
                 <div key={i} className={`leading-relaxed whitespace-pre-wrap ${line.cls || ''}`}>
                   {line.text}
                 </div>
               ))}
-              <div ref={endRef} />
             </div>
 
             {/* Input row */}
