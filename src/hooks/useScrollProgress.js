@@ -1,65 +1,50 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
-const getZoomLevel = (p) => {
-  if (p <= 0.2) return 1;
-  if (p <= 0.4) return 2;
-  if (p <= 0.6) return 3;
-  if (p <= 0.8) return 4;
-  return 5;
-};
+/**
+ * Tracks which portfolio section (1-5) sits in the middle of the viewport.
+ * The page scrolls natively — every section is real document flow — so there
+ * is no fake scroll height, no hysteresis, and no scroll fighting. The 3D
+ * scene reads raw window.scrollY itself and needs nothing from here.
+ */
+export function useActiveSection(count = 5) {
+  const [active, setActive] = useState(1);
+  const refs = useRef([]);
 
-export function useScrollProgress() {
-  const [level, setLevel] = useState(1);
+  const sectionRef = useCallback(
+    (index) => (el) => {
+      refs.current[index] = el;
+    },
+    []
+  );
 
   useEffect(() => {
-    let ticking = false;
-    let currentLvl = 1;
-
-    // Defined level ranges with hysteresis buffer to prevent boundary thrashing
-    const calcLevel = (p, current) => {
-      // Boundaries at ~0.2, 0.4, 0.6, 0.8 with 0.02 hysteresis
-      if (current === 1) {
-        return p > 0.22 ? 2 : 1;
-      } else if (current === 2) {
-        if (p < 0.18) return 1;
-        if (p > 0.42) return 3;
-        return 2;
-      } else if (current === 3) {
-        if (p < 0.38) return 2;
-        if (p > 0.62) return 4;
-        return 3;
-      } else if (current === 4) {
-        if (p < 0.58) return 3;
-        if (p > 0.82) return 5;
-        return 4;
-      } else {
-        return p < 0.78 ? 4 : 5;
-      }
-    };
-
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-          const p = scrollHeight > 0 ? window.scrollY / scrollHeight : 0;
-          const nextLvl = calcLevel(p, currentLvl);
-          
-          if (nextLvl !== currentLvl) {
-            currentLvl = nextLvl;
-            setLevel(nextLvl);
+    const els = refs.current.filter(Boolean);
+    if (els.length === 0 || !('IntersectionObserver' in window)) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const lvl = Number(entry.target.getAttribute('data-level'));
+            if (lvl >= 1 && lvl <= count) setActive(lvl);
           }
-          
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
+        }
+      },
+      // Only the section crossing the viewport middle band counts.
+      { rootMargin: '-40% 0px -40% 0px', threshold: 0 }
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [count]);
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // init
+  return { active, sectionRef };
+}
 
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  return (level - 1) * 0.2 + 0.1;
+/** Travel to a section with native smooth scrolling. */
+export function scrollToLevel(level) {
+  try {
+    const clamped = Math.min(5, Math.max(1, level));
+    document
+      .querySelector(`[data-level="${clamped}"]`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch {}
 }
