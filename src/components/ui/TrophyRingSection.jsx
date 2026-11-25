@@ -34,9 +34,9 @@ export default function TrophyRingSection() {
 
   return (
     <div className="w-full">
-      {/* Tall scroll runway: the gallery sticks while the page travels. */}
-      <div className="relative w-full" style={{ height: '400vh' }}>
-        <div className="sticky top-0 flex h-screen w-full flex-col overflow-hidden pt-14 md:pt-16">
+      {/* Tall scroll runway on desktop; short on phones where the pager needs no scroll. */}
+      <div className="relative w-full h-[220vh] sm:h-[400vh]">
+        <div className="sticky top-0 flex h-svh w-full flex-col overflow-hidden pt-14 md:pt-16">
           {/* Hero stays in flow above the 3D stage — never over the cards. */}
           <div className="z-10 shrink-0 px-4 text-center">
             <p
@@ -51,13 +51,15 @@ export default function TrophyRingSection() {
               Mission Logs
             </h2>
             <p className="mt-1 font-mono text-xs text-text-secondary">
-              Scroll to rotate the gallery
+              <span className="sm:hidden">Swipe to browse the gallery</span>
+              <span className="hidden sm:inline">Scroll to rotate the gallery</span>
             </p>
 
             {/* Category pills — same naming as the vault: hackathons,
                 certificates, workshops, beyond the syllabus. */}
             <div
               className="mx-auto mt-3 flex w-fit max-w-full gap-1.5 overflow-x-auto custom-scrollbar scroll-px-3 px-3 py-1"
+              style={{ touchAction: 'pan-x pan-y' }}
               role="tablist"
               aria-label="Mission categories"
             >
